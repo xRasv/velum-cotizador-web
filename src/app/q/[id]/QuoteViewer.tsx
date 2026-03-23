@@ -86,7 +86,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
 
   return (
     <div className="min-h-screen pb-[240px]">
-      <header className="relative bg-black/50 h-[40vh] min-h-[300px] flex flex-col justify-end p-8 text-white">
+      <header className="relative bg-black/50 h-[40vh] min-h-[320px] flex flex-col justify-end p-8 pb-16 md:pb-24 text-white">
         <div 
           className="absolute inset-0 -z-10 bg-cover bg-center"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop')" }}
