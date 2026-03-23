@@ -168,23 +168,25 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
 
       </main>
 
-      <div className="fixed bottom-0 left-0 w-full bg-card p-4 md:p-6 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-center z-50 gap-4">
-        <div className="text-center md:text-left">
-          <p className="text-sm text-muted uppercase tracking-wider">Inversión Total Estimada</p>
-          <h2 className="text-3xl font-bold text-primary transition-all duration-300">
-            {formatCurrency(grandTotal)}
-          </h2>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <button onClick={() => window.print()} className="px-6 py-3 rounded-full font-semibold border-2 border-muted text-foreground hover:border-primary hover:text-primary transition-all w-full sm:w-auto">
-            📄 Descargar PDF
-          </button>
-          <button 
-            onClick={handleApprove}
-            className="px-6 py-3 rounded-full font-semibold bg-primary text-white shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all w-full sm:w-auto"
-          >
-            ✅ Aprobar Cotización
-          </button>
+      <div className="fixed bottom-0 left-0 w-full bg-card shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-50">
+        <div className="max-w-4xl mx-auto p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+          <div className="text-center md:text-left">
+            <p className="text-sm text-muted uppercase tracking-wider">Inversión Total Estimada</p>
+            <h2 className="text-3xl font-bold text-primary transition-all duration-300">
+              {formatCurrency(grandTotal)}
+            </h2>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <button onClick={() => window.print()} className="px-6 py-3 rounded-full font-semibold border-2 border-muted text-foreground hover:border-primary hover:text-primary transition-all w-full sm:w-auto">
+              📄 Descargar PDF
+            </button>
+            <button 
+              onClick={handleApprove}
+              className="px-6 py-3 rounded-full font-semibold bg-primary text-white shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all w-full sm:w-auto"
+            >
+              ✅ Aprobar Cotización
+            </button>
+          </div>
         </div>
       </div>
     </div>

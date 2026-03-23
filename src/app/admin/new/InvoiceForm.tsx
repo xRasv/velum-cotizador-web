@@ -34,9 +34,7 @@ type ItemInput = {
 
 const PREDEFINED_ADDONS = [
   "Motor Automático (Control Remoto)",
-  "Cenefa Decorativa Premium",
-  "Fascia de Aluminio",
-  "Mecanismo de Doble Rodillo"
+  "Cenefa Decorativa Premium"
 ]
 
 function CustomDropdown({ 
@@ -304,14 +302,14 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
                 {/* Addons Array */}
                 <div className="mt-6 border-t border-gray-100 pt-5">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-sm font-bold text-gray-700">Opciones Adicionales y Mejoras</h4>
+                    <h4 className="text-sm font-bold text-gray-700">Opciones Adicionales y Extras</h4>
                     <button type="button" onClick={() => addAddon(idx)} className="text-xs text-primary hover:bg-primary/10 border border-primary/20 bg-primary/5 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5">
-                      <Plus size={14}/> Añadir Mejora
+                      <Plus size={14}/> Añadir Extra
                     </button>
                   </div>
                   
                   {item.addons.length === 0 && (
-                    <p className="text-xs text-gray-400 mb-2">No hay mejoras adicionales para este producto.</p>
+                    <p className="text-xs text-gray-400 mb-2">No hay extras adicionales para este producto.</p>
                   )}
 
                   <div className="space-y-3">
@@ -328,7 +326,7 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
                             <input 
                               type="text" 
                               required
-                              placeholder="Describe la mejora..." 
+                              placeholder="Describe el extra..." 
                               value={addon.addon_name} 
                               onChange={(e) => updateAddon(idx, aIdx, 'addon_name', e.target.value)} 
                               className="w-full border border-primary/40 rounded-lg p-2 text-sm bg-white" 
