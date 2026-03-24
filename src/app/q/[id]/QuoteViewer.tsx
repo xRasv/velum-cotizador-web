@@ -186,28 +186,30 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-slate-900/40 to-transparent" />
         </motion.div>
         
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="absolute top-6 left-6 md:top-8 md:left-8 z-20 print:static print:mb-4"
+        >
+          <img 
+            src="/assets/logos/long_logo.png" 
+            alt="VELUM" 
+            className="h-8 md:h-10 w-auto object-contain brightness-0 invert print:filter-none"
+          />
+        </motion.div>
+
         <div className="max-w-4xl mx-auto w-full relative z-10 px-4 md:px-8 pb-4">
-          <motion.div 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="absolute -top-32 left-4 md:left-8 print:static print:mb-4"
-          >
-             <h2 className="text-3xl font-extrabold tracking-[0.2em] uppercase text-white/90 print:text-blue-900">
-              Velum.
-             </h2>
-          </motion.div>
-          
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
+            transition={{ duration: 0.8, delay: 0.4, type: "spring" } as any}
           >
             <p className="text-blue-200/80 uppercase tracking-widest text-sm font-semibold mb-3">Propuesta Exclusiva</p>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-light mb-4 leading-tight tracking-tight">
-              Cotización <br className="hidden md:block" /><span className="font-semibold text-white">de Diseño</span>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-light mb-4 leading-tight tracking-tight text-white">
+              Cotización <br className="hidden md:block" /><span className="font-semibold">a la Medida</span>
             </h1>
-            <p className="text-xl md:text-2xl opacity-90 font-light flex items-center gap-3">
+            <p className="text-lg md:text-2xl opacity-90 font-light flex items-center gap-3">
               Preparado para <strong className="font-medium text-white">{invoice.client_name}</strong>
             </p>
           </motion.div>
@@ -239,9 +241,9 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-sm md:text-base text-slate-400 uppercase tracking-[0.2em] mt-16 mb-8 font-bold text-center print:text-left print:text-black print:mt-8"
+          className="text-sm md:text-base text-slate-400 uppercase tracking-[0.2em] mt-12 md:mt-16 mb-6 md:mb-8 font-bold text-center print:text-left print:text-black print:mt-8"
         >
-          Detalles de los Espacios
+          Detalles de los Productos
         </motion.h2>
 
         {/* Room Breakdown Items */}
@@ -275,20 +277,22 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
               </div>
               
               {/* Product Info */}
-              <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-                <div className="flex flex-col xl:flex-row justify-between items-start gap-4 mb-6">
-                  <div>
-                    <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-widest mb-3">
+              <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
+                <div className="flex flex-col xl:flex-row justify-between items-start gap-4 mb-5 md:mb-6">
+                  <div className="flex-1 min-w-0 pr-0 md:pr-4">
+                    <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 text-[10px] md:text-xs font-bold rounded-full uppercase tracking-widest mb-3">
                       Habitación: {item.room_name}
                     </span>
-                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">{item.product_name}</h3>
+                    <h3 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 truncate">
+                      {item.product_name}
+                    </h3>
                   </div>
-                  <div className="text-2xl md:text-3xl font-light text-slate-900 mt-2 xl:mt-0 bg-slate-50 px-4 py-2 rounded-2xl print:bg-transparent print:p-0">
+                  <div className="text-2xl md:text-3xl font-light text-slate-900 mt-1 md:mt-0 xl:mt-0 bg-slate-50 px-4 py-2 rounded-2xl print:bg-transparent print:p-0 whitespace-nowrap flex-shrink-0 self-start">
                     {formatCurrency(Number(item.base_price))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mb-6 pt-6 border-t border-slate-100">
+                <div className="grid grid-cols-3 gap-3 md:gap-4 mb-5 md:mb-6 pt-5 md:pt-6 border-t border-slate-100">
                   <div>
                     <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Ancho</p>
                     <p className="text-sm md:text-base font-medium text-slate-800">{item.width}m</p>
@@ -359,26 +363,24 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ y: 150, opacity: 0, scale: 0.9, x: "-50%" }}
           animate={{ y: 0, opacity: 1, scale: 1, x: "-50%" }}
           transition={{ type: "spring", stiffness: 200, damping: 25, delay: 1 }}
-          className="fixed bottom-6 md:bottom-10 left-1/2 w-[95%] md:w-auto z-50 print:hidden"
+          className="fixed bottom-6 md:bottom-10 left-1/2 w-[95%] md:w-max min-w-[320px] max-w-2xl z-50 print:hidden"
         >
-          <div className="bg-white/80 backdrop-blur-2xl ring-1 ring-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-full p-2 md:p-3 flex flex-col md:flex-row items-center gap-2 md:gap-6 mx-auto w-full max-w-2xl px-4 md:px-8 border border-slate-200/50">
+          <div className="bg-white/90 backdrop-blur-2xl ring-1 ring-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] rounded-full py-2 px-3 md:p-3 flex flex-row items-center justify-between w-full border border-slate-200/60">
             
-            <div className="flex-1 w-full flex items-center justify-between md:justify-start px-2 py-2 md:py-0">
-              <div className="flex flex-col">
-                <p className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Inversión Estimada</p>
-                <div className="flex items-baseline gap-1 text-slate-900 font-extrabold text-2xl md:text-3xl tracking-tight">
-                  <span className="text-lg md:text-xl font-medium text-slate-400">Q.</span>
-                  {mounted ? <AnimatedCounter value={grandTotal} /> : grandTotal.toLocaleString()}
-                </div>
+            <div className="flex flex-col pl-4 md:pl-6 pr-4">
+              <p className="text-[9px] md:text-xs text-slate-500 uppercase tracking-widest font-bold leading-tight">Total</p>
+              <div className="flex items-baseline gap-1 text-slate-900 font-extrabold text-xl md:text-3xl tracking-tight leading-none mt-1">
+                <span className="text-sm md:text-xl font-medium text-slate-400">Q.</span>
+                <span>{mounted ? <AnimatedCounter value={grandTotal} /> : formatCurrency(grandTotal).replace('Q. ', '')}</span>
               </div>
             </div>
             
-            <div className="w-full md:w-px h-px md:h-10 bg-slate-200" />
+            <div className="w-px h-8 md:h-10 bg-slate-200 mx-2 md:mx-4" />
             
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-2">
               <button 
                 onClick={() => window.print()} 
-                className="w-12 h-12 md:w-14 md:h-14 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100"
+                className="hidden sm:flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100"
                 title="Descargar PDF"
               >
                 <FileDown size={20} strokeWidth={2.5} />
@@ -386,7 +388,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
               <button 
                 onClick={handleApprove}
                 disabled={isApproving}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 h-12 md:h-14 rounded-full font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/40 transition-all focus:ring-4 focus:ring-blue-600/30 group disabled:opacity-70 disabled:pointer-events-none overflow-hidden relative"
+                className="flex items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 h-12 md:h-14 rounded-full font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/40 transition-all text-sm md:text-base focus:ring-4 focus:ring-blue-600/30 group disabled:opacity-70 disabled:pointer-events-none overflow-hidden relative whitespace-nowrap"
               >
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
@@ -395,8 +397,8 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                   <span className="animate-pulse">Procesando...</span>
                 ) : (
                   <>
-                    <CheckCircle size={20} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
-                    <span className="tracking-wide">Aprobar Ahora</span>
+                    <CheckCircle size={18} strokeWidth={2.5} className="group-hover:scale-110 transition-transform md:w-5 md:h-5" />
+                    <span className="tracking-wide">Aprobar</span>
                   </>
                 )}
               </button>
