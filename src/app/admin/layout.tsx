@@ -118,7 +118,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               <div>
                 <div className="px-6 flex justify-between items-center mb-6 mt-2">
-                  <Link href="/admin">
+                  <Link href="/admin" onClick={() => setMobileOpen(false)}>
                     <Image 
                       src="/assets/logos/long_logo.png" 
                       alt="VELUM" 

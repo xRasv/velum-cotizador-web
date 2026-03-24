@@ -116,20 +116,20 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="relative h-[40vh] min-h-[300px] flex flex-col justify-end p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8"
+        className="relative h-[40vh] min-h-[300px] flex flex-col justify-end p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
       >
         <div 
-          className="absolute inset-0 -z-10 bg-cover bg-center print:hidden"
+          className="absolute inset-0 z-0 bg-cover bg-center print:hidden"
           style={{ backgroundImage: "url('/assets/hero.png')" }}
         />
-        <div className="absolute inset-0 bg-black/40 -z-10 print:hidden" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent -z-10 print:hidden" />
+        <div className="absolute inset-0 bg-black/40 z-0 print:hidden" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-0 print:hidden" />
         
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="absolute top-6 left-6 md:top-8 md:left-8 text-2xl font-extrabold tracking-widest uppercase print:static print:text-primary print:mb-4"
+          className="absolute top-6 left-6 md:top-8 md:left-8 text-2xl font-extrabold tracking-widest uppercase print:static print:text-primary print:mb-4 z-10"
         >
           Velum.
         </motion.div>
@@ -138,6 +138,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
+          className="relative z-10"
         >
           <h1 className="text-4xl md:text-5xl font-light mb-2 leading-tight">
             Cotización de Diseño

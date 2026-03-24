@@ -38,8 +38,8 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32">
-      <div className="mb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-4 pb-32">
+      <div className="mb-4">
         <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Editar Cotización</h2>
         <p className="text-slate-500 font-medium tracking-wide text-sm">Modifica los detalles de la cotización existente.</p>
       </div>
