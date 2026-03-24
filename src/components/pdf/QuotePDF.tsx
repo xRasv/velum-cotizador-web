@@ -27,7 +27,7 @@ type Invoice = { id: string; client_name: string; reference_code: string; valid_
 // PDF Styles
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 30, // Reduced from 40
     fontFamily: 'Inter',
     backgroundColor: '#ffffff',
     color: '#334155',
@@ -35,71 +35,71 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
-    borderBottom: '2px solid #f1f5f9',
-    paddingBottom: 20,
+    marginBottom: 20, // Reduced from 40
+    borderBottom: '1px solid #f1f5f9',
+    paddingBottom: 15, // Reduced from 20
   },
   logo: {
-    width: 120,
-    height: 35,
+    width: 100, // Reduced from 120
+    height: 30, // Reduced from 35
     objectFit: 'contain',
   },
   titleArea: {
     alignItems: 'flex-end',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20, // Reduced from 24
     fontWeight: 700,
     color: '#0f172a',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     color: '#64748b',
   },
   clientInfoBox: {
     backgroundColor: '#f8fafc',
-    padding: 20,
-    borderRadius: 8,
-    marginBottom: 30,
+    padding: 12, // Reduced from 20
+    borderRadius: 6,
+    marginBottom: 15, // Reduced from 30
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   clientLabel: {
-    fontSize: 10,
+    fontSize: 9, // Reduced from 10
     color: '#94a3b8',
     textTransform: 'uppercase',
-    marginBottom: 6,
+    marginBottom: 4,
     fontWeight: 600,
     letterSpacing: 1,
   },
   clientValue: {
-    fontSize: 16,
+    fontSize: 13, // Reduced from 16
     fontWeight: 600,
     color: '#1e293b',
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     fontWeight: 700,
     color: '#94a3b8',
     textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: 20,
-    marginTop: 10,
+    letterSpacing: 1.5,
+    marginBottom: 12, // Reduced from 20
+    marginTop: 5,
   },
   itemRow: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 12, // Reduced from 24
     borderBottom: '1px solid #e2e8f0',
-    paddingBottom: 24,
+    paddingBottom: 12, // Reduced from 24
   },
   itemImage: {
-    width: 120,
-    height: 120,
+    width: 70, // Reduced from 120
+    height: 70, // Reduced from 120
     backgroundColor: '#f1f5f9',
-    borderRadius: 8,
+    borderRadius: 6,
     objectFit: 'cover',
-    marginRight: 20,
+    marginRight: 15, // Reduced from 20
   },
   itemContent: {
     flex: 1,
@@ -108,98 +108,98 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8, // Reduced from 12
   },
   itemRoom: {
-    fontSize: 10,
+    fontSize: 9, // Reduced from 10
     color: '#64748b',
-    backgroundColor: '#f1f5f9',
-    padding: '4 8',
-    borderRadius: 12,
-    marginBottom: 8,
+    backgroundColor: '#e2e8f0',
+    padding: '3 6',
+    borderRadius: 8,
+    marginBottom: 4,
     alignSelf: 'flex-start',
     fontWeight: 600,
   },
   itemName: {
-    fontSize: 18,
+    fontSize: 14, // Reduced from 18
     fontWeight: 700,
     color: '#0f172a',
   },
   itemPrice: {
-    fontSize: 16,
+    fontSize: 13, // Reduced from 16
     fontWeight: 600,
     color: '#0f172a',
   },
   specsRow: {
     flexDirection: 'row',
-    marginBottom: 16,
-    gap: 30, // Needs custom spacing in react-pdf
+    marginBottom: 8, // Reduced from 16
+    gap: 20, // Reduced from 30
   },
   specBox: {
-    marginRight: 30,
+    marginRight: 20, // Reduced from 30
   },
   specLabel: {
-    fontSize: 9,
+    fontSize: 8, // Reduced from 9
     color: '#94a3b8',
     textTransform: 'uppercase',
     fontWeight: 700,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   specValue: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     color: '#334155',
     fontWeight: 600,
   },
   addonsContainer: {
     backgroundColor: '#f8fafc',
-    padding: 12,
-    borderRadius: 6,
-    marginTop: 8,
+    padding: 8, // Reduced from 12
+    borderRadius: 4,
+    marginTop: 4, // Reduced from 8
   },
   addonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 3, // Reduced from 6
     borderBottom: '1px solid #e2e8f0',
   },
   addonName: {
-    fontSize: 11,
+    fontSize: 9, // Reduced from 11
     color: '#334155',
   },
   addonPrice: {
-    fontSize: 11,
+    fontSize: 9, // Reduced from 11
     color: '#64748b',
   },
   totalSection: {
-    marginTop: 20,
+    marginTop: 10, // Reduced from 20
     alignItems: 'flex-end',
     backgroundColor: '#f8fafc',
-    padding: 24,
-    borderRadius: 12,
+    padding: 15, // Reduced from 24
+    borderRadius: 8,
   },
   totalLabel: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     color: '#64748b',
     textTransform: 'uppercase',
     fontWeight: 700,
-    marginBottom: 8,
+    marginBottom: 4,
     letterSpacing: 1,
   },
   totalValue: {
-    fontSize: 28,
+    fontSize: 22, // Reduced from 28
     fontWeight: 700,
-    color: '#2563eb', // velum blue
+    color: '#2563eb', 
   },
   footer: {
     position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
+    bottom: 20, // Reduced from 30
+    left: 30, // Matches new page padding
+    right: 30, // Matches new page padding
     textAlign: 'center',
     color: '#94a3b8',
-    fontSize: 10,
+    fontSize: 9, // Reduced from 10
     borderTop: '1px solid #f1f5f9',
-    paddingTop: 15,
+    paddingTop: 10, // Reduced from 15
   }
 })
 
