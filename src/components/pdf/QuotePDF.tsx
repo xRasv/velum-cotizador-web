@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
     paddingBottom: 15, // Reduced from 20
   },
   logo: {
-    width: 100, // Reduced from 120
-    height: 30, // Reduced from 35
+    width: 140, 
+    height: 42, 
     objectFit: 'contain',
   },
   titleArea: {
@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: 10, // Reduced from 12
-    color: '#64748b',
+    fontSize: 12, 
+    color: '#475569',
   },
   clientInfoBox: {
     backgroundColor: '#f8fafc',
@@ -171,11 +171,27 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   totalSection: {
-    marginTop: 10, // Reduced from 20
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginTop: 10,
     backgroundColor: '#f8fafc',
-    padding: 15, // Reduced from 24
+    padding: 15,
     borderRadius: 8,
+  },
+  termsContainer: {
+    flex: 1,
+    paddingRight: 20,
+  },
+  termsText: {
+    fontSize: 8,
+    color: '#64748b',
+    lineHeight: 1.5,
+    marginBottom: 2,
+  },
+  totalContainer: {
+    alignItems: 'flex-end',
+    minWidth: 120,
   },
   totalLabel: {
     fontSize: 10, // Reduced from 12
@@ -320,10 +336,18 @@ export const QuotePDF = ({ invoice, selectedAddons }: { invoice: Invoice, select
           )
         })}
 
-        {/* Grand Total */}
+        {/* Grand Total and Terms */}
         <View style={styles.totalSection} wrap={false}>
-          <Text style={styles.totalLabel}>Total Inversión</Text>
-          <Text style={styles.totalValue}>{formatCurrency(grandTotal)}</Text>
+          <View style={styles.termsContainer}>
+            <Text style={styles.termsText}>- Términos de pago: 60% de anticipo / 40% contra entrega el día de la instalación.</Text>
+            <Text style={styles.termsText}>- Tiempo de entrega aproximado: De 1 a 2 semanas.</Text>
+            <Text style={styles.termsText}>- Términos y condiciones: velum.com.gt/terminos-y-condiciones.</Text>
+            <Text style={styles.termsText}>- Instalación: Sin costo en la ciudad capital, excluyendo zonas rojas.</Text>
+          </View>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>Total Inversión</Text>
+            <Text style={styles.totalValue}>{formatCurrency(grandTotal)}</Text>
+          </View>
         </View>
 
         {/* Footer */}
