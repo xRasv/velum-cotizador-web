@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import { FileDown, CheckCircle, Plus, Check } from 'lucide-react'
 import { acceptInvoice } from '@/app/actions'
+import { generatePdf } from '@/utils/generatePdf'
 
 type Addon = {
   id: string
@@ -56,6 +57,8 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   const [mounted, setMounted] = useState(false)
   const [isApproving, setIsApproving] = useState(false)
   const [approved, setApproved] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const pdfContentRef = useRef<HTMLDivElement>(null)
   
   // Parallax effects
   const { scrollY } = useScroll()
@@ -108,6 +111,21 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
 
   const formatCurrency = (amount: number) => {
     return 'Q. ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!pdfContentRef.current || isGeneratingPdf) return
+    setIsGeneratingPdf(true)
+    try {
+      const filename = `Cotizacion-${invoice.reference_code || 'Velum'}.pdf`
+      await generatePdf(pdfContentRef.current, filename)
+    } catch (err) {
+      console.error('PDF generation failed:', err)
+      // Fallback to browser print
+      window.print()
+    } finally {
+      setIsGeneratingPdf(false)
+    }
   }
 
   const handleApprove = async () => {
@@ -167,7 +185,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }
 
   return (
-    <div className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
+    <div ref={pdfContentRef} className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
       
       {/* Background ambient noise/gradient */}
       <div className="fixed inset-0 pointer-events-none before:fixed before:inset-0 before:-z-20 before:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] before:from-blue-50/50 before:via-transparent before:to-transparent opacity-60 print:hidden" />
@@ -358,6 +376,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       </main>
 
       {/* Floating Action Bar Console */}
+      <div data-no-pdf>
       <AnimatePresence>
         <motion.div 
           initial={{ y: 150, opacity: 0, scale: 0.9, x: "-50%" }}
@@ -379,11 +398,19 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
             
             <div className="flex items-center gap-2">
               <button 
-                onClick={() => window.print()} 
-                className="hidden sm:flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100"
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 disabled:opacity-50 disabled:pointer-events-none"
                 title="Descargar PDF"
               >
-                <FileDown size={20} strokeWidth={2.5} />
+                {isGeneratingPdf ? (
+                  <svg className="animate-spin h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <FileDown size={20} strokeWidth={2.5} />
+                )}
               </button>
               <button 
                 onClick={handleApprove}
@@ -406,6 +433,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           </div>
         </motion.div>
       </AnimatePresence>
+      </div>
 
     </div>
   )
