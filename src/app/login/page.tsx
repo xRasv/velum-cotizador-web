@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Lock, ArrowRight } from 'lucide-react'
 
@@ -46,9 +47,9 @@ export default function LoginPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
-            className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-primary/20"
+            className="flex justify-center mb-8"
           >
-            <Lock size={24} />
+            <Image src="/assets/logos/long_logo.png" alt="Velum Logo" width={180} height={50} className="object-contain" />
           </motion.div>
           
           <motion.div
@@ -56,7 +57,7 @@ export default function LoginPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <h1 className="text-2xl font-black text-center mb-1 tracking-tight">Velum Admin</h1>
+            <h1 className="text-xl font-bold text-center mb-1 tracking-tight">Portal de Administración</h1>
             <p className="text-sm text-gray-500 text-center mb-8">Ingresa tu contraseña para continuar</p>
           </motion.div>
 

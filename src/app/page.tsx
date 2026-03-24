@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { MessageCircle, FileText, ArrowRight, ShieldCheck, Star } from 'lucide-react'
@@ -39,9 +40,8 @@ export default function LandingPage() {
         transition={{ duration: 0.6 }}
         className="p-6 md:p-8 flex justify-between items-center max-w-7xl mx-auto"
       >
-        <div className="text-2xl font-black tracking-tight flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">V</div>
-          <span>Velum.</span>
+        <div className="flex items-center">
+          <Image src="/assets/logos/long_logo.png" alt="Velum" width={140} height={40} className="object-contain" />
         </div>
         <div className="flex gap-4 items-center">
           <Link href="/admin" className="text-sm font-medium text-gray-500 hover:text-black transition-colors hidden sm:block">

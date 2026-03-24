@@ -2,6 +2,7 @@
 
 import { LayoutDashboard, FilePlus, LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,12 +31,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         className="w-64 bg-white border-r border-gray-100 hidden md:flex flex-col shadow-sm"
       >
         <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-primary/20">V</div>
-            <div>
-              <div className="text-lg font-black tracking-tight">Velum.</div>
-              <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Cotizador Admin</div>
-            </div>
+          <div className="flex flex-col gap-2">
+            <Image src="/assets/logos/long_logo.png" alt="Velum Logo" width={110} height={32} className="object-contain" />
+            <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold ml-1">Cotizador Admin</div>
           </div>
         </div>
         
@@ -97,9 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 md:hidden flex flex-col shadow-2xl"
             >
               <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-sm">V</div>
-                  <span className="text-lg font-black tracking-tight">Velum.</span>
+                <div className="flex items-center">
+                  <Image src="/assets/logos/long_logo.png" alt="Velum Logo" width={110} height={32} className="object-contain" />
                 </div>
                 <button onClick={() => setMobileOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <X size={20} />
@@ -141,7 +138,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Menu size={22} />
           </button>
-          <div className="text-lg font-black tracking-tight">Velum.</div>
+          <Image src="/assets/logos/long_logo.png" alt="Velum" width={100} height={28} className="object-contain" />
           <Link href="/admin/new" className="text-primary font-semibold text-sm bg-primary/5 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors">
             Nueva +
           </Link>
