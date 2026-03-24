@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import { FileDown, CheckCircle, Plus, Check } from 'lucide-react'
 import { acceptInvoice } from '@/app/actions'
 
@@ -34,8 +34,34 @@ type Invoice = {
   items: Item[]
 }
 
+// Animated Counter component for smooth price transitions
+function AnimatedCounter({ value }: { value: number }) {
+  const rounded = useSpring(value, { bounce: 0, duration: 800 })
+  const [display, setDisplay] = useState(value)
+  
+  useEffect(() => {
+    rounded.on("change", (latest) => {
+      setDisplay(latest)
+    })
+  }, [rounded])
+
+  useEffect(() => {
+    rounded.set(value)
+  }, [value, rounded])
+
+  return <span>{display.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+}
+
 export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   const [mounted, setMounted] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
+  const [approved, setApproved] = useState(false)
+  
+  // Parallax effects
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 600], [0, 200])
+  const opacity = useTransform(scrollY, [0, 400], [1, 0])
+  const scale = useTransform(scrollY, [0, 600], [1, 1.1])
   
   // Calculate base total from all item base prices
   const baseTotal = invoice.items.reduce((acc, item) => acc + Number(item.base_price), 0)
@@ -58,6 +84,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }, [])
 
   const toggleAddon = (addonId: string) => {
+    if (approved) return // disable changes if approved
     const newSet = new Set(selectedAddons)
     if (newSet.has(addonId)) {
       newSet.delete(addonId)
@@ -84,87 +111,125 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }
 
   const handleApprove = async () => {
+    setIsApproving(true)
     const res = await acceptInvoice(invoice.id)
     if (res.success) {
-      alert("¡Cotización aprobada y notificada correctamente!")
-      window.location.reload()
+      setApproved(true)
+      // Remove visual elements by scrolling top, then reload after showing success screen
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
     } else {
       alert("Hubo un error al aprobar la cotización.")
+      setIsApproving(false)
     }
   }
 
   // Animation variants
-  const staggerContainer: any = {
+  const staggerContainer = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.15
       }
     }
   }
 
-  const fadeIn: any = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50 } }
+  const fadeIn = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 60, damping: 20 } }
+  }
+
+  if (approved) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          className="text-center"
+        >
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+            className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-600/30"
+          >
+            <Check size={48} className="text-white" strokeWidth={3} />
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">¡Cotización Aprobada!</h1>
+          <p className="text-xl text-slate-500 font-medium">Gracias por confiar en Velum.</p>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen pb-[240px] md:pb-[140px] bg-background text-foreground font-sans print:bg-white print:pb-0">
-      {/* Hero Section */}
+    <div className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
+      
+      {/* Background ambient noise/gradient */}
+      <div className="fixed inset-0 pointer-events-none before:fixed before:inset-0 before:-z-20 before:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] before:from-blue-50/50 before:via-transparent before:to-transparent opacity-60 print:hidden" />
+
+      {/* Cinematic Hero Section */}
       <motion.header 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="relative h-[40vh] min-h-[300px] flex flex-col justify-end p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
+        style={{ y, opacity }}
+        className="relative h-[45vh] min-h-[400px] flex flex-col justify-end p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
       >
-        <div 
-          className="absolute inset-0 z-0 bg-cover bg-center print:hidden"
-          style={{ backgroundImage: "url('/assets/hero.png')" }}
-        />
-        <div className="absolute inset-0 bg-black/40 z-0 print:hidden" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-0 print:hidden" />
-        
         <motion.div 
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="absolute top-6 left-6 md:top-8 md:left-8 text-2xl font-extrabold tracking-widest uppercase print:static print:text-primary print:mb-4 z-10"
+          style={{ scale }}
+          className="absolute inset-0 z-0 bg-cover bg-center print:hidden"
         >
-          Velum.
+          <div className="absolute inset-0 bg-[url('/assets/hero.png')] bg-cover bg-center mix-blend-overlay opacity-90" />
+          <div className="absolute inset-0 bg-slate-900/60 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-slate-900/40 to-transparent" />
         </motion.div>
         
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="relative z-10"
-        >
-          <h1 className="text-4xl md:text-5xl font-light mb-2 leading-tight">
-            Cotización de Diseño
-          </h1>
-          <p className="text-lg opacity-90 font-light">
-            Preparado especialmente para <span className="font-medium">{invoice.client_name}</span>
-          </p>
-        </motion.div>
+        <div className="max-w-4xl mx-auto w-full relative z-10 px-4 md:px-8 pb-4">
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="absolute -top-32 left-4 md:left-8 print:static print:mb-4"
+          >
+             <h2 className="text-3xl font-extrabold tracking-[0.2em] uppercase text-white/90 print:text-blue-900">
+              Velum.
+             </h2>
+          </motion.div>
+          
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4, type: "spring" }}
+          >
+            <p className="text-blue-200/80 uppercase tracking-widest text-sm font-semibold mb-3">Propuesta Exclusiva</p>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-light mb-4 leading-tight tracking-tight">
+              Cotización <br className="hidden md:block" /><span className="font-semibold text-white">de Diseño</span>
+            </h1>
+            <p className="text-xl md:text-2xl opacity-90 font-light flex items-center gap-3">
+              Preparado para <strong className="font-medium text-white">{invoice.client_name}</strong>
+            </p>
+          </motion.div>
+        </div>
       </motion.header>
 
-      <main className="max-w-4xl mx-auto -mt-10 md:-mt-12 relative z-10 px-4 md:px-8 print:mt-0 print:px-0">
+      <main className="max-w-4xl mx-auto -mt-6 relative z-20 px-4 md:px-8 print:mt-0 print:px-0">
         
-        {/* Summary Card */}
+        {/* Editorial Summary Card */}
         <motion.div 
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="bg-card rounded-xl p-6 md:p-8 shadow-xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center border-t-4 border-primary gap-6 print:border-t-2 print:shadow-none print:border-gray-200"
+          transition={{ delay: 0.6, type: "spring", stiffness: 100, damping: 20 }}
+          className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 mb-12 ring-1 ring-black/5 print:border-t-4 print:border-blue-900 print:shadow-none print:ring-0 print:rounded-none"
         >
           <div>
-            <p className="text-muted text-sm uppercase tracking-wider mb-1 font-semibold">Referencia: #{invoice.reference_code}</p>
-            <h2 className="text-2xl font-semibold text-primary">Proyecto Residencial</h2>
+            <p className="text-slate-400 text-xs md:text-sm uppercase tracking-widest mb-2 font-bold">Referencia #{invoice.reference_code}</p>
+            <h2 className="text-2xl md:text-3xl font-semibold text-slate-800 tracking-tight">Proyecto Residencial</h2>
           </div>
-          <div className="sm:text-right">
-            <p className="text-muted text-sm uppercase tracking-wider mb-1 font-semibold">Fecha de validez</p>
-            <strong className="text-lg text-primary">
+          <div className="sm:text-right bg-slate-50 p-4 md:p-5 rounded-2xl w-full sm:w-auto border border-slate-100 print:bg-transparent print:border-0 print:p-0">
+            <p className="text-slate-400 text-xs md:text-sm uppercase tracking-widest mb-1 font-bold">Fecha de validez</p>
+            <strong className="text-lg md:text-xl text-slate-800 font-medium">
               {new Date(invoice.valid_until).toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' })}
             </strong>
           </div>
@@ -174,9 +239,9 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-lg md:text-xl text-muted uppercase tracking-wider mt-12 mb-6 font-semibold print:mt-8 print:text-black"
+          className="text-sm md:text-base text-slate-400 uppercase tracking-[0.2em] mt-16 mb-8 font-bold text-center print:text-left print:text-black print:mt-8"
         >
-          Detalles por Habitación
+          Detalles de los Espacios
         </motion.h2>
 
         {/* Room Breakdown Items */}
@@ -188,137 +253,158 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           {invoice.items.map((item) => (
             <motion.article 
               variants={fadeIn}
-              whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0,0,0,0.08)" }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               key={item.id} 
-              className="bg-card rounded-xl overflow-hidden shadow-sm mb-6 transition-all duration-300 print:shadow-none print:border print:border-gray-200 print:mb-4 print:page-break-inside-avoid"
+              className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-black/5 mb-8 md:flex md:flex-row transition-all duration-500 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] group print:shadow-none print:ring-gray-200 print:mb-6 print:page-break-inside-avoid print:rounded-xl"
             >
-              <div className="flex flex-col sm:flex-row p-6 border-b border-gray-100/50 gap-6">
+              {/* Product Image */}
+              <div className="w-full md:w-[35%] h-[240px] md:h-auto relative overflow-hidden bg-slate-50 print:h-[200px]">
                 {item.image_url ? (
-                  <img src={item.image_url} alt={item.product_name} className="w-full sm:w-[120px] h-48 sm:h-[120px] object-cover rounded-lg bg-gray-50 print:hidden" />
+                  <motion.img 
+                    whileHover={{ scale: 1.05 }} 
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    src={item.image_url} 
+                    alt={item.product_name} 
+                    className="w-full h-full object-cover" 
+                  />
                 ) : (
-                  <div className="w-full sm:w-[120px] h-48 sm:h-[120px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 print:hidden">
+                  <div className="w-full h-full flex items-center justify-center text-slate-300 font-medium tracking-wide">
                     Sin imagen
                   </div>
                 )}
-                
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-3">
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-semibold mb-2 text-primary">{item.product_name}</h3>
-                      <span className="inline-block px-3 py-1 bg-gray-100 text-muted text-xs font-medium rounded-full uppercase tracking-wider">
-                        Ubicación: {item.room_name}
-                      </span>
-                    </div>
-                    <div className="text-xl md:text-2xl font-bold text-primary mt-2 sm:mt-0">
-                      {formatCurrency(Number(item.base_price))}
-                    </div>
-                  </div>
-                  <p className="text-muted text-sm md:text-base">
-                    Ancho: <span className="font-medium text-foreground">{item.width}m</span> &nbsp;|&nbsp; 
-                    Alto: <span className="font-medium text-foreground">{item.height}m</span> &nbsp;|&nbsp; 
-                    Tela: <span className="font-medium text-foreground">{item.fabric_name}</span>
-                  </p>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none md:hidden" />
               </div>
               
-              {/* Interactive Add-ons */}
-              {item.addons.length > 0 && (
-                <div className="p-4 sm:p-6 bg-[#fafafa] flex flex-col gap-3 print:bg-white print:p-4">
-                  <p className="text-xs text-muted uppercase tracking-wider font-semibold mb-1 print:text-black">Opciones de Mejora</p>
-                  <div className="grid gap-3">
-                    {item.addons.map(addon => {
-                      const isSelected = selectedAddons.has(addon.id)
-                      return (
-                        <motion.div 
-                          layout
-                          key={addon.id}
-                          onClick={() => toggleAddon(addon.id)}
-                          className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border rounded-lg cursor-pointer transition-colors duration-300 gap-3
-                            ${isSelected ? 'border-accent bg-[#fffdf5]' : 'border-gray-200 bg-white hover:border-accent/60'}
-                            print:border-none print:p-0 print:mt-1
-                          `}
-                        >
-                          <div className="flex items-center gap-3">
-                            <motion.div 
-                              layout
-                              className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors
-                                ${isSelected ? 'bg-accent text-white' : 'bg-gray-100 text-gray-400'}
-                                print:hidden
-                              `}
-                            >
-                              {isSelected ? <Check size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
-                            </motion.div>
-                            <div>
-                              <h4 className={`font-semibold ${isSelected ? 'text-primary' : 'text-gray-700'}`}>
+              {/* Product Info */}
+              <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+                <div className="flex flex-col xl:flex-row justify-between items-start gap-4 mb-6">
+                  <div>
+                    <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-widest mb-3">
+                      Habitación: {item.room_name}
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">{item.product_name}</h3>
+                  </div>
+                  <div className="text-2xl md:text-3xl font-light text-slate-900 mt-2 xl:mt-0 bg-slate-50 px-4 py-2 rounded-2xl print:bg-transparent print:p-0">
+                    {formatCurrency(Number(item.base_price))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-6 pt-6 border-t border-slate-100">
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Ancho</p>
+                    <p className="text-sm md:text-base font-medium text-slate-800">{item.width}m</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Alto</p>
+                    <p className="text-sm md:text-base font-medium text-slate-800">{item.height}m</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Tela</p>
+                    <p className="text-sm md:text-base font-medium text-slate-800 truncate">{item.fabric_name}</p>
+                  </div>
+                </div>
+                
+                {/* Interactive Add-ons */}
+                {item.addons.length > 0 && (
+                  <div className="bg-slate-50/50 rounded-2xl p-4 md:p-6 ring-1 ring-slate-100/50 print:bg-white print:ring-0 print:border print:border-gray-200">
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-4">Opciones de Mejora</p>
+                    <div className="grid gap-3">
+                      {item.addons.map(addon => {
+                        const isSelected = selectedAddons.has(addon.id)
+                        return (
+                          <motion.div 
+                            layout
+                            key={addon.id}
+                            onClick={() => toggleAddon(addon.id)}
+                            className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition-all duration-300
+                              ${isSelected 
+                                ? 'bg-blue-600 ring-1 ring-blue-600 shadow-md shadow-blue-600/20' 
+                                : 'bg-white ring-1 ring-slate-200 hover:ring-blue-300 hover:shadow-sm'}
+                              print:ring-0 print:bg-transparent print:border-b print:border-gray-100 print:rounded-none print:p-2
+                            `}
+                          >
+                            <div className="flex items-center gap-3 md:gap-4">
+                              <motion.div 
+                                layout
+                                className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors
+                                  ${isSelected ? 'bg-white text-blue-600' : 'bg-slate-100 text-slate-400'}
+                                  print:hidden
+                                `}
+                              >
+                                {isSelected ? <Check size={14} strokeWidth={4} /> : <Plus size={14} strokeWidth={3} />}
+                              </motion.div>
+                              <h4 className={`font-medium tracking-wide text-sm md:text-base ${isSelected ? 'text-white' : 'text-slate-700'}`}>
                                 {addon.addon_name}
                               </h4>
                             </div>
-                          </div>
-                          
-                          <div className={`font-semibold sm:ml-auto ml-9 ${isSelected ? 'text-accent' : 'text-muted'} print:text-black`}>
-                            {isSelected ? '' : '+ '} {formatCurrency(Number(addon.price))}
-                            <span className="hidden print:inline"> ( {isSelected ? 'Incluido' : 'Opcional'} )</span>
-                          </div>
-                        </motion.div>
-                      )
-                    })}
+                            
+                            <div className={`font-medium text-sm md:text-base tabular-nums ${isSelected ? 'text-blue-100' : 'text-slate-500'} print:text-black`}>
+                              {isSelected ? '' : '+ '} {formatCurrency(Number(addon.price))}
+                              <span className="hidden print:inline"> ( {isSelected ? 'Inscrito' : 'Opcional'} )</span>
+                            </div>
+                          </motion.div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </motion.article>
           ))}
         </motion.div>
-
       </main>
 
-      {/* Fixed Action Bar */}
+      {/* Floating Action Bar Console */}
       <AnimatePresence>
         <motion.div 
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30, delay: 1 }}
-          className="fixed bottom-0 left-0 w-full bg-card shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-50 print:hidden"
+          initial={{ y: 150, opacity: 0, scale: 0.9, x: "-50%" }}
+          animate={{ y: 0, opacity: 1, scale: 1, x: "-50%" }}
+          transition={{ type: "spring", stiffness: 200, damping: 25, delay: 1 }}
+          className="fixed bottom-6 md:bottom-10 left-1/2 w-[95%] md:w-auto z-50 print:hidden"
         >
-          <div className="max-w-4xl mx-auto p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
-            <div className="text-center md:text-left w-full md:w-auto">
-              <p className="text-xs md:text-sm text-muted uppercase tracking-wider font-semibold mb-1">Inversión Total Estimada</p>
-              
-              <AnimatePresence mode="popLayout">
-                {mounted && (
-                  <motion.h2 
-                    key={grandTotal}
-                    initial={{ scale: 1.1, color: 'var(--color-accent)' }}
-                    animate={{ scale: 1, color: 'var(--color-primary)' }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                    className="text-3xl md:text-4xl font-bold text-primary"
-                  >
-                    {formatCurrency(grandTotal)}
-                  </motion.h2>
-                )}
-              </AnimatePresence>
+          <div className="bg-white/80 backdrop-blur-2xl ring-1 ring-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-full p-2 md:p-3 flex flex-col md:flex-row items-center gap-2 md:gap-6 mx-auto w-full max-w-2xl px-4 md:px-8 border border-slate-200/50">
+            
+            <div className="flex-1 w-full flex items-center justify-between md:justify-start px-2 py-2 md:py-0">
+              <div className="flex flex-col">
+                <p className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Inversión Estimada</p>
+                <div className="flex items-baseline gap-1 text-slate-900 font-extrabold text-2xl md:text-3xl tracking-tight">
+                  <span className="text-lg md:text-xl font-medium text-slate-400">Q.</span>
+                  {mounted ? <AnimatedCounter value={grandTotal} /> : grandTotal.toLocaleString()}
+                </div>
+              </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto mt-2 md:mt-0">
+            <div className="w-full md:w-px h-px md:h-10 bg-slate-200" />
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <button 
                 onClick={() => window.print()} 
-                className="flex items-center justify-center gap-2 px-6 py-3 md:py-4 rounded-full font-semibold border-2 border-muted text-foreground hover:border-primary hover:text-primary transition-colors focus:ring-4 focus:ring-gray-100"
+                className="w-12 h-12 md:w-14 md:h-14 flex-shrink-0 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100"
+                title="Descargar PDF"
               >
-                <FileDown size={20} />
-                <span>Descargar PDF</span>
+                <FileDown size={20} strokeWidth={2.5} />
               </button>
               <button 
                 onClick={handleApprove}
-                className="group flex items-center justify-center gap-2 px-6 py-3 md:py-4 rounded-full font-semibold bg-primary text-white shadow-lg shadow-black/10 hover:bg-black hover:-translate-y-1 hover:shadow-xl transition-all focus:ring-4 focus:ring-primary/30"
+                disabled={isApproving}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 h-12 md:h-14 rounded-full font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/40 transition-all focus:ring-4 focus:ring-blue-600/30 group disabled:opacity-70 disabled:pointer-events-none overflow-hidden relative"
               >
-                <CheckCircle size={20} className="group-hover:scale-110 transition-transform" />
-                <span>Aprobar Cotización</span>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
+                
+                {isApproving ? (
+                  <span className="animate-pulse">Procesando...</span>
+                ) : (
+                  <>
+                    <CheckCircle size={20} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                    <span className="tracking-wide">Aprobar Ahora</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
+
     </div>
   )
 }

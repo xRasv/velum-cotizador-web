@@ -51,3 +51,9 @@ body {
     page-break-inside: avoid;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
