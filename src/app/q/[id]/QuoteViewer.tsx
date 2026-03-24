@@ -175,7 +175,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       {/* Cinematic Hero Section */}
       <motion.header 
         style={{ y, opacity }}
-        className="relative h-[45vh] min-h-[400px] flex flex-col justify-end p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
+        className="relative h-[38vh] min-h-[320px] md:h-[45vh] md:min-h-[400px] flex flex-col justify-end p-6 md:p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
       >
         <motion.div 
           style={{ scale }}
@@ -223,7 +223,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, type: "spring", stiffness: 100, damping: 20 }}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 mb-12 ring-1 ring-black/5 print:border-t-4 print:border-blue-900 print:shadow-none print:ring-0 print:rounded-none"
+          className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-8 mb-6 md:mb-12 ring-1 ring-black/5 print:border-t-4 print:border-blue-900 print:shadow-none print:ring-0 print:rounded-none"
         >
           <div>
             <p className="text-slate-400 text-xs md:text-sm uppercase tracking-widest mb-2 font-bold">Referencia #{invoice.reference_code}</p>
@@ -241,7 +241,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-sm md:text-base text-slate-400 uppercase tracking-[0.2em] mt-12 md:mt-16 mb-6 md:mb-8 font-bold text-center print:text-left print:text-black print:mt-8"
+          className="text-sm md:text-base text-slate-400 uppercase tracking-[0.2em] mt-6 md:mt-16 mb-6 md:mb-8 font-bold text-center print:text-left print:text-black print:mt-8"
         >
           Detalles de los Productos
         </motion.h2>
