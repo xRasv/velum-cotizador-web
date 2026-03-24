@@ -55,13 +55,15 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12, 
-    color: '#475569',
+    color: '#0f172a', // Darkened significantly for readability
   },
   clientInfoBox: {
-    backgroundColor: '#f8fafc',
-    padding: 12, // Reduced from 20
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderTop: '4px solid #2563eb', // Velum blue accent
+    padding: 16, 
     borderRadius: 6,
-    marginBottom: 15, // Reduced from 30
+    marginBottom: 20, 
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -173,11 +175,13 @@ const styles = StyleSheet.create({
   totalSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginTop: 10,
-    backgroundColor: '#f8fafc',
-    padding: 15,
-    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 15,
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderLeft: '4px solid #2563eb', // Velum blue accent
+    padding: 20,
+    borderRadius: 6,
   },
   termsContainer: {
     flex: 1,
@@ -185,9 +189,9 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: 8,
-    color: '#64748b',
+    color: '#0f172a', // Darkened significantly for readability
     lineHeight: 1.5,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   totalContainer: {
     alignItems: 'flex-end',
