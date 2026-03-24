@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice } from '@/app/actions'
@@ -191,21 +192,33 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft size={24} />
+    <div className="max-w-4xl mx-auto pb-28">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-4 mb-8"
+      >
+        <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+          <ArrowLeft size={22} />
         </Link>
-        <h1 className="text-2xl font-bold">Crear Nueva Cotización</h1>
-      </div>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight">Nueva Cotización</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Completa los datos del cliente y los productos</p>
+        </div>
+      </motion.div>
 
       <form action={createInvoice} className="space-y-8">
         
         <input type="hidden" name="items" value={JSON.stringify(items)} />
         <input type="hidden" name="total_amount" value={total} />
         
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold border-b pb-2 mb-4">Datos del Cliente</h2>
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+        >
+          <h2 className="text-lg font-bold border-b border-gray-100 pb-3 mb-5">Datos del Cliente</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">Nombre el Cliente *</label>
@@ -220,14 +233,23 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
               <input required name="valid_until" type="date" defaultValue={new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex justify-between items-center border-b pb-2 mb-4">
-            <h2 className="text-lg font-semibold">Productos Solicitados</h2>
-            <button type="button" onClick={addItem} className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/20 font-medium text-sm transition-colors">
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+        >
+          <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-5">
+            <h2 className="text-lg font-bold">Productos Solicitados</h2>
+            <motion.button 
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              type="button" onClick={addItem} className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-xl text-primary hover:bg-primary/20 font-semibold text-sm transition-colors"
+            >
               <Plus size={16} /> Añadir Producto
-            </button>
+            </motion.button>
           </div>
 
           {items.length === 0 && (
@@ -237,9 +259,18 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
             </div>
           )}
 
+          <AnimatePresence mode="popLayout">
           <div className="space-y-6">
             {items.map((item, idx) => (
-              <div key={item.id} className="p-5 border border-gray-200 bg-white rounded-xl shadow-sm relative group transition-all hover:border-gray-300">
+              <motion.div 
+                layout
+                key={item.id} 
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                transition={{ type: "spring", stiffness: 100, damping: 18 }}
+                className="p-5 border border-gray-100 bg-white rounded-2xl shadow-sm relative group transition-all hover:border-gray-200 hover:shadow-md"
+              >
                 <button type="button" onClick={() => removeItem(idx)} className="absolute top-5 right-5 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors">
                   <Trash2 size={18} />
                 </button>
@@ -369,20 +400,30 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
                   </div>
                 </div>
 
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+          </AnimatePresence>
+        </motion.section>
 
-        <div className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-between items-center z-50 md:pl-64 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <motion.div 
+          initial={{ y: 80 }}
+          animate={{ y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.4 }}
+          className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 p-4 flex justify-between items-center z-50 md:pl-64 shadow-[0_-4px_30px_rgba(0,0,0,0.06)]"
+        >
           <div>
-            <span className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] block">Gran Total (Base)</span>
-            <span className="font-black text-2xl text-primary">Q. {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            <span className="text-gray-400 uppercase tracking-widest font-bold text-[10px] block">Gran Total (Base)</span>
+            <span className="font-black text-2xl md:text-3xl text-primary">Q. {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
-          <button type="submit" className="bg-primary text-white px-6 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:bg-black hover:shadow-xl transition-all hover:-translate-y-0.5">
+          <motion.button 
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            type="submit" className="bg-primary text-white px-6 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:bg-black hover:shadow-xl transition-all shadow-lg shadow-primary/15"
+          >
             <Save size={20} /> Guardar Cotización
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
       </form>
     </div>
