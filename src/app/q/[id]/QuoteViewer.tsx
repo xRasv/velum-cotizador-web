@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import { FileDown, CheckCircle, Plus, Check } from 'lucide-react'
 import { acceptInvoice } from '@/app/actions'
-import { generatePdf } from '@/utils/generatePdf'
+import { pdf } from '@react-pdf/renderer'
+import { QuotePDF } from '@/components/pdf/QuotePDF'
 
 type Addon = {
   id: string
@@ -58,7 +59,6 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   const [isApproving, setIsApproving] = useState(false)
   const [approved, setApproved] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
-  const pdfContentRef = useRef<HTMLDivElement>(null)
   
   // Parallax effects
   const { scrollY } = useScroll()
@@ -114,14 +114,30 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }
 
   const handleDownloadPdf = async () => {
-    if (!pdfContentRef.current || isGeneratingPdf) return
+    if (isGeneratingPdf) return
     setIsGeneratingPdf(true)
     try {
       const filename = `Cotizacion-${invoice.reference_code || 'Velum'}.pdf`
-      await generatePdf(pdfContentRef.current, filename)
+      
+      // Generate standard Blob via @react-pdf/renderer
+      const blob = await pdf(<QuotePDF invoice={invoice} selectedAddons={Array.from(selectedAddons)} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      if (isIOS) {
+        window.open(url, '_blank')
+      } else {
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (err) {
       console.error('PDF generation failed:', err)
-      // Fallback to browser print
+      // Fallback
       window.print()
     } finally {
       setIsGeneratingPdf(false)
@@ -185,7 +201,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }
 
   return (
-    <div ref={pdfContentRef} className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
+    <div className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
       
       {/* Background ambient noise/gradient */}
       <div className="fixed inset-0 pointer-events-none before:fixed before:inset-0 before:-z-20 before:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] before:from-blue-50/50 before:via-transparent before:to-transparent opacity-60 print:hidden" />
@@ -376,7 +392,6 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       </main>
 
       {/* Floating Action Bar Console */}
-      <div data-no-pdf>
       <AnimatePresence>
         <motion.div 
           initial={{ y: 150, opacity: 0, scale: 0.9, x: "-50%" }}
@@ -433,7 +448,6 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           </div>
         </motion.div>
       </AnimatePresence>
-      </div>
 
     </div>
   )

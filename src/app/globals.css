@@ -33,22 +33,29 @@ body {
 }
 
 @media print {
-  /* Remove backgrounds and shadows for clean PDF */
+  @page {
+    margin: 0; 
+  }
+  
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: var(--background) !important;
+  }
+  
   body {
     padding-bottom: 0;
-    background: white;
   }
-  .bg-card {
-    box-shadow: none !important;
-    border: 1px solid #eee;
-  }
+
   /* Hide the fixed action bar and interactivity buttons */
   .fixed.bottom-0, button {
     display: none !important;
   }
+
   /* Ensure page breaks don't split cards awkwardly */
   article {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
 
