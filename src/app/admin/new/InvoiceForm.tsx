@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check } from 'lucide-react'
 import Link from 'next/link'
-import { createInvoice } from '@/app/actions'
+import { createInvoice, updateInvoice } from '@/app/actions'
 
 type Product = {
   id: string
@@ -114,9 +114,31 @@ function CustomDropdown({
   )
 }
 
-export default function InvoiceForm({ products }: { products: Product[] }) {
-  const [items, setItems] = useState<ItemInput[]>([])
-  const [total, setTotal] = useState(0)
+export default function InvoiceForm({ products, initialData, invoiceId }: { products: Product[], initialData?: any, invoiceId?: string }) {
+  const [items, setItems] = useState<ItemInput[]>(() => {
+    if (initialData && initialData.items) {
+      return initialData.items.map((item: any) => ({
+        id: item.id || crypto.randomUUID(),
+        room_name: item.room_name || '',
+        product_name: item.product_name || '',
+        isCustomProduct: !products.some(p => p.name === item.product_name),
+        width: item.width || 0,
+        height: item.height || 0,
+        fabric_name: item.fabric_name || '',
+        base_price: item.base_price || 0,
+        image_url: item.image_url || '',
+        addons: item.addons?.map((addon: any) => ({
+          id: addon.id || crypto.randomUUID(),
+          addon_name: addon.addon_name || '',
+          price: addon.price || 0,
+          is_selected: addon.is_selected || false,
+          isCustom: !PREDEFINED_ADDONS.includes(addon.addon_name)
+        })) || []
+      }))
+    }
+    return []
+  })
+  const [total, setTotal] = useState(initialData?.total_amount || 0)
 
   const addItem = () => {
     setItems([...items, {
@@ -202,13 +224,14 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
           <ArrowLeft size={22} />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight">Nueva Cotización</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Completa los datos del cliente y los productos</p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight">{invoiceId ? 'Editar Cotización' : 'Nueva Cotización'}</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{invoiceId ? 'Modifica los datos existentes de la cotización' : 'Completa los datos del cliente y los productos'}</p>
         </div>
       </motion.div>
 
-      <form action={createInvoice} className="space-y-8">
+      <form action={invoiceId ? updateInvoice : createInvoice} className="space-y-8">
         
+        {invoiceId && <input type="hidden" name="invoice_id" value={invoiceId} />}
         <input type="hidden" name="items" value={JSON.stringify(items)} />
         <input type="hidden" name="total_amount" value={total} />
         
@@ -222,15 +245,15 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">Nombre el Cliente *</label>
-              <input required name="client_name" type="text" className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan Pérez" />
+              <input required name="client_name" type="text" defaultValue={initialData?.client_name || ''} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="Ej. Juan Pérez" />
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Código de Referencia *</label>
-              <input required name="reference_code" type="text" defaultValue={`VLM-${new Date().getFullYear()}-${Math.floor(Math.random()*10000)}`} className="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary font-mono text-sm" />
+              <input required name="reference_code" type="text" defaultValue={initialData?.reference_code || `VLM-${new Date().getFullYear()}-${Math.floor(Math.random()*10000)}`} className="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary font-mono text-sm" />
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Validez de la Cotización *</label>
-              <input required name="valid_until" type="date" defaultValue={new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+              <input required name="valid_until" type="date" defaultValue={initialData?.valid_until || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
             </div>
           </div>
         </motion.section>
@@ -421,7 +444,7 @@ export default function InvoiceForm({ products }: { products: Product[] }) {
             whileTap={{ scale: 0.97 }}
             type="submit" className="bg-primary text-white px-6 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:bg-black hover:shadow-xl transition-all shadow-lg shadow-primary/15"
           >
-            <Save size={20} /> Guardar Cotización
+            <Save size={20} /> {invoiceId ? 'Actualizar Cotización' : 'Guardar Cotización'}
           </motion.button>
         </motion.div>
 

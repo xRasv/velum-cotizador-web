@@ -96,3 +96,104 @@ export async function acceptInvoice(invoiceId: string) {
   // Next.js cache revalidation could be added here if needed
   return { success: true }
 }
+
+export async function updateProduct(id: string, name: string, image_url: string | null) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('products')
+    .update({ name, image_url })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating product:', error)
+    return { error: 'No se pudo actualizar el producto' }
+  }
+
+  return { success: true }
+}
+
+export async function updateInvoice(formData: FormData) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  const invoiceId = formData.get('invoice_id') as string
+  if (!invoiceId) throw new Error('Missing invoice ID')
+
+  const rawInvoice = {
+    client_name: formData.get('client_name') as string,
+    reference_code: formData.get('reference_code') as string,
+    valid_until: formData.get('valid_until') as string,
+    total_amount: Number(formData.get('total_amount')),
+  }
+
+  // 1. Update Invoice
+  const { error: invoiceError } = await supabase
+    .from('invoices')
+    .update(rawInvoice)
+    .eq('id', invoiceId)
+
+  if (invoiceError) {
+    console.error('Error updating invoice:', invoiceError)
+    throw new Error('Failed to update invoice')
+  }
+
+  // Parse items
+  const itemsJson = formData.get('items') as string
+  if (itemsJson) {
+    try {
+      const items = JSON.parse(itemsJson)
+
+      // Delete old items and re-insert 
+      await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId)
+
+      for (const item of items) {
+        // Insert Item
+        const { data: insertedItem, error: itemError } = await supabase
+          .from('invoice_items')
+          .insert([{
+            invoice_id: invoiceId,
+            room_name: item.room_name,
+            product_name: item.product_name,
+            width: item.width,
+            height: item.height,
+            fabric_name: item.fabric_name,
+            base_price: item.base_price,
+            image_url: item.image_url || null
+          }])
+          .select()
+          .single()
+
+        if (itemError || !insertedItem) {
+          console.error('Error creating item:', itemError)
+          continue
+        }
+
+        // Insert Addons
+        if (item.addons && item.addons.length > 0) {
+          const addonsToInsert = item.addons.map((a: any) => ({
+            item_id: insertedItem.id,
+            addon_name: a.addon_name,
+            price: a.price,
+            is_selected: a.is_selected || false
+          }))
+
+          await supabase.from('invoice_item_addons').insert(addonsToInsert)
+        }
+      }
+    } catch (e) {
+      console.error('Failed parsing items:', e)
+    }
+  }
+
+  redirect('/admin')
+}

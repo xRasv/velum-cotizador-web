@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Eye, ExternalLink, FileText, TrendingUp, Clock, CheckCircle, MoreVertical, Filter, Download } from 'lucide-react'
+import { Eye, Pencil, FileText, TrendingUp, Clock, CheckCircle, Search, Filter, Download } from 'lucide-react'
 
 type Invoice = {
   id: string
@@ -64,7 +65,13 @@ const cardVariant: any = {
 }
 
 export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[] | null, stats: Stats }) {
+  const [searchQuery, setSearchQuery] = useState('')
   const conversionRate = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
+
+  const filteredInvoices = invoices?.filter(invoice => 
+    invoice.reference_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    invoice.client_name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div>
@@ -141,18 +148,34 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
         transition={{ delay: 0.2 }}
         className="bg-white rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] overflow-hidden"
       >
-        {/* Table Header */}
-        <div className="px-6 md:px-8 py-6 flex items-center justify-between border-b border-gray-100">
+        {/* Table Header & Search */}
+        <div className="px-6 md:px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
           <h3 className="font-bold text-lg text-gray-900">Cotizaciones Recientes</h3>
-          <div className="flex gap-4">
-            <button className="text-gray-500 text-sm font-medium hover:text-blue-600 flex items-center gap-2 transition-colors">
-              <Filter size={16} />
-              <span className="hidden sm:inline">Filtrar</span>
-            </button>
-            <button className="text-gray-500 text-sm font-medium hover:text-blue-600 flex items-center gap-2 transition-colors">
-              <Download size={16} />
-              <span className="hidden sm:inline">Exportar</span>
-            </button>
+          
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-64 md:w-80">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por referencia o cliente..."
+                className="w-full bg-gray-50 border border-gray-200 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+              />
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-end">
+              <button className="text-gray-500 text-sm font-medium hover:text-blue-600 flex items-center gap-2 transition-colors">
+                <Filter size={16} />
+                <span className="hidden lg:inline">Filtrar</span>
+              </button>
+              <button className="text-gray-500 text-sm font-medium hover:text-blue-600 flex items-center gap-2 transition-colors">
+                <Download size={16} />
+                <span className="hidden lg:inline">Exportar</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -170,22 +193,28 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
               </tr>
             </thead>
             <motion.tbody variants={stagger} initial="hidden" animate="show" className="divide-y divide-gray-50">
-              {(!invoices || invoices.length === 0) && (
+              {(!filteredInvoices || filteredInvoices.length === 0) && (
                 <tr>
                   <td colSpan={6} className="p-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
                         <FileText size={28} />
                       </div>
-                      <p className="text-gray-400 font-medium">No hay cotizaciones todavía.</p>
-                      <Link href="/admin/new" className="text-blue-600 font-semibold text-sm hover:underline">
-                        Crear la primera →
-                      </Link>
+                      <p className="text-gray-400 font-medium">No se encontraron cotizaciones.</p>
+                      {searchQuery ? (
+                        <button onClick={() => setSearchQuery('')} className="text-blue-600 font-semibold text-sm hover:underline">
+                          Limpiar búsqueda
+                        </button>
+                      ) : (
+                        <Link href="/admin/new" className="text-blue-600 font-semibold text-sm hover:underline">
+                          Crear la primera →
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>
               )}
-              {invoices?.map((invoice) => (
+              {filteredInvoices?.map((invoice) => (
                 <motion.tr
                   variants={rowVariant}
                   key={invoice.id}
@@ -214,15 +243,13 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
                       >
                         <Eye size={18} />
                       </Link>
-                      <a
-                        href={`/q/${invoice.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors hover:bg-blue-50 rounded-lg"
-                        title="Abrir URL Pública"
+                      <Link
+                        href={`/admin/edit/${invoice.id}`}
+                        className="p-2 text-gray-400 hover:text-amber-600 transition-colors hover:bg-amber-50 rounded-lg"
+                        title="Modificar"
                       >
-                        <ExternalLink size={18} />
-                      </a>
+                        <Pencil size={18} />
+                      </Link>
                     </div>
                   </td>
                 </motion.tr>
@@ -232,9 +259,9 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
         </div>
 
         {/* Table Footer */}
-        {invoices && invoices.length > 0 && (
+        {filteredInvoices && filteredInvoices.length > 0 && (
           <div className="px-6 md:px-8 py-5 bg-gray-50/30 border-t border-gray-100">
-            <p className="text-xs text-gray-500 font-medium">Mostrando {invoices.length} de {stats.total} resultados</p>
+            <p className="text-xs text-gray-500 font-medium">Mostrando {filteredInvoices.length} de {invoices?.length || 0} resultados</p>
           </div>
         )}
       </motion.div>

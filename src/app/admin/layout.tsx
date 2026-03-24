@@ -1,7 +1,8 @@
 'use client'
 
-import { LayoutDashboard, FilePlus, LogOut, Menu, X, Search, Bell, Plus, Settings, History } from 'lucide-react'
+import { LayoutDashboard, FilePlus, LogOut, Menu, X, Plus, Settings } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -9,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/new', label: 'Nueva Cotización', icon: FilePlus },
-  { href: '#', label: 'Historial', icon: History },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -32,8 +32,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div>
           {/* Logo */}
-          <div className="px-8">
-            <h1 className="text-lg font-black tracking-widest text-white mb-8">VELUM.</h1>
+          <div className="px-8 mt-2 mb-8">
+            <Link href="/admin">
+              <Image 
+                src="/assets/logos/long_logo.png" 
+                alt="VELUM" 
+                width={140} 
+                height={40} 
+                className="h-8 w-auto object-contain brightness-0 invert"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Navigation */}
@@ -73,10 +82,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
             <nav className="flex flex-col gap-1">
-              <button className="text-slate-400 flex items-center gap-3 py-2 hover:text-white transition-colors text-sm font-light text-left">
+              <Link href="/admin/settings" className="text-slate-400 flex items-center gap-3 py-2 hover:text-white transition-colors text-sm font-light w-full text-left">
                 <Settings size={18} />
                 <span>Settings</span>
-              </button>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-slate-400 flex items-center gap-3 py-2 hover:text-white transition-colors text-sm font-light text-left"
@@ -108,8 +117,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="fixed left-0 top-0 bottom-0 w-72 bg-slate-950 z-50 md:hidden flex flex-col py-8 justify-between shadow-2xl"
             >
               <div>
-                <div className="px-6 flex justify-between items-center mb-6">
-                  <h1 className="text-lg font-black tracking-widest text-white">VELUM.</h1>
+                <div className="px-6 flex justify-between items-center mb-6 mt-2">
+                  <Link href="/admin">
+                    <Image 
+                      src="/assets/logos/long_logo.png" 
+                      alt="VELUM" 
+                      width={120} 
+                      height={32} 
+                      className="h-7 w-auto object-contain brightness-0 invert"
+                    />
+                  </Link>
                   <button onClick={() => setMobileOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
                     <X size={20} />
                   </button>
@@ -134,10 +151,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
               </div>
               <div className="border-t border-slate-800 pt-6 px-6">
-                <button onClick={handleLogout} className="flex items-center gap-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-light w-full text-left">
-                  <LogOut size={18} />
-                  <span>Cerrar Sesión</span>
-                </button>
+                <nav className="flex flex-col gap-2">
+                  <Link href="/admin/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-light w-full text-left">
+                    <Settings size={18} />
+                    <span>Settings</span>
+                  </Link>
+                  <button onClick={handleLogout} className="flex items-center gap-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-light w-full text-left">
+                    <LogOut size={18} />
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </nav>
               </div>
             </motion.div>
           </>
@@ -147,22 +170,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content Canvas */}
       <main className="md:ml-[260px] flex-1 min-h-screen flex flex-col">
         {/* Desktop Top Bar — Glassmorphism */}
-        <header className="hidden md:flex h-20 items-center justify-between px-12 sticky top-0 z-40 bg-white/70 backdrop-blur-[20px]" style={{ WebkitBackdropFilter: 'blur(20px)' }}>
-          <div className="flex-1 max-w-xl">
-            <div className="relative">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar cotizaciones, clientes o facturas..."
-                className="w-full bg-[#f2f4f6] border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all duration-300 outline-none"
-              />
-            </div>
-          </div>
+        <header className="hidden md:flex h-20 items-center justify-end px-12 sticky top-0 z-40 bg-white/70 backdrop-blur-[20px]" style={{ WebkitBackdropFilter: 'blur(20px)' }}>
           <div className="flex items-center gap-6">
-            <button className="relative text-gray-500 hover:text-blue-600 transition-colors">
-              <Bell size={22} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 href="/admin/new"
@@ -180,7 +189,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Menu size={22} />
           </button>
-          <h1 className="text-sm font-black tracking-widest">VELUM.</h1>
+          
+          <Link href="/admin">
+            <Image 
+              src="/assets/logos/square_logo.png" 
+              alt="VELUM" 
+              width={32} 
+              height={32} 
+              className="h-8 w-8 object-contain"
+            />
+          </Link>
+
           <Link href="/admin/new" className="text-blue-600 font-semibold text-sm bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
             Nueva +
           </Link>
