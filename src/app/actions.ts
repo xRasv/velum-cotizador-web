@@ -153,6 +153,13 @@ export async function updateInvoice(formData: FormData) {
     try {
       const items = JSON.parse(itemsJson)
 
+      // Fetch old item IDs to delete their associated addons first (to prevent foreign key constraint violations)
+      const { data: oldItems } = await supabase.from('invoice_items').select('id').eq('invoice_id', invoiceId)
+      if (oldItems && oldItems.length > 0) {
+        const oldItemIds = oldItems.map(item => item.id)
+        await supabase.from('invoice_item_addons').delete().in('item_id', oldItemIds)
+      }
+
       // Delete old items and re-insert 
       await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId)
 
