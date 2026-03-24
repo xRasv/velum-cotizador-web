@@ -223,7 +223,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, type: "spring", stiffness: 100, damping: 20 }}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-8 mb-6 md:mb-12 ring-1 ring-black/5 print:border-t-4 print:border-blue-900 print:shadow-none print:ring-0 print:rounded-none"
+          className="bg-white rounded-3xl p-8 md:p-10 shadow-[0_12px_40px_rgb(0,0,0,0.10)] border-l-4 border-l-blue-600 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-8 mb-6 md:mb-12 print:border-t-4 print:border-blue-900 print:shadow-none print:ring-0 print:rounded-none"
         >
           <div>
             <p className="text-slate-400 text-xs md:text-sm uppercase tracking-widest mb-2 font-bold">Referencia #{invoice.reference_code}</p>
