@@ -120,9 +120,9 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       >
         <div 
           className="absolute inset-0 -z-10 bg-cover bg-center print:hidden"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop')" }}
+          style={{ backgroundImage: "url('/assets/hero.png')" }}
         />
-        <div className="absolute inset-0 bg-black/50 -z-10 print:hidden" />
+        <div className="absolute inset-0 bg-black/40 -z-10 print:hidden" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent -z-10 print:hidden" />
         
         <motion.div 
