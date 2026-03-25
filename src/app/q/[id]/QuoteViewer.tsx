@@ -5,8 +5,6 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import { FileDown, CheckCircle, Plus, Check } from 'lucide-react'
 import { acceptInvoice } from '@/app/actions'
-import { pdf } from '@react-pdf/renderer'
-import { QuotePDF } from '@/components/pdf/QuotePDF'
 
 type Addon = {
   id: string
@@ -129,6 +127,10 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
     }
 
     try {
+      // DYNAMICALLY import react-pdf and the template so it doesn't break SSR or bloat initial load
+      const { pdf } = await import('@react-pdf/renderer')
+      const { QuotePDF } = await import('@/components/pdf/QuotePDF')
+
       const filename = `Cotizacion-${invoice.reference_code || 'Velum'}.pdf`
       
       // Generate standard Blob via @react-pdf/renderer
