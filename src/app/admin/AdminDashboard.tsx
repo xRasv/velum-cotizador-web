@@ -151,7 +151,7 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] overflow-hidden"
+        className="bg-white rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] w-full max-w-full overflow-hidden"
       >
         {/* Table Header & Search */}
         <div className="px-6 md:px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
