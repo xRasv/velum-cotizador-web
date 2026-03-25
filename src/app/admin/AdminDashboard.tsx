@@ -185,8 +185,8 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto pb-4 hide-scrollbar">
+          <table className="w-full min-w-[900px] text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50">
                 <th className="px-6 md:px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Referencia</th>
