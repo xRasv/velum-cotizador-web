@@ -6,10 +6,18 @@ import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice, updateInvoice } from '@/app/actions'
 
-type Product = {
+type Fabric = {
   id: string
   name: string
   image_url: string | null
+}
+
+type Product = {
+  id: string
+  name: string
+  visible_name: string | null
+  image_url: string | null
+  fabrics: Fabric[]
 }
 
 type AddonInput = {
@@ -161,15 +169,25 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
     if (isCustom) {
       newItems[index].product_name = ''
       newItems[index].isCustomProduct = true
+      newItems[index].fabric_name = '' // reset fabric on product change
     } else {
-      newItems[index].product_name = productName
-      newItems[index].isCustomProduct = false
       const product = products.find(p => p.name === productName)
+      // Use visible_name for the customer-facing product_name, fallback to internal name
+      newItems[index].product_name = product?.visible_name || productName
+      newItems[index].isCustomProduct = false
+      newItems[index].fabric_name = '' // reset fabric on product change
       if (product?.image_url) {
         newItems[index].image_url = product.image_url
       }
     }
     setItems(newItems)
+  }
+
+  // Helper to get the internal product for a given item
+  const getProductForItem = (item: ItemInput) => {
+    if (item.isCustomProduct) return null
+    // Match by visible_name first, then by internal name
+    return products.find(p => (p.visible_name || p.name) === item.product_name) || products.find(p => p.name === item.product_name) || null
   }
 
   const removeItem = (index: number) => {
@@ -252,8 +270,8 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
               <input required name="reference_code" type="text" defaultValue={initialData?.reference_code || `VLM-${new Date().getFullYear()}-${Math.floor(Math.random()*10000)}`} className="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary font-mono text-sm" />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Validez de la Cotización *</label>
-              <input required name="valid_until" type="date" defaultValue={initialData?.valid_until || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
+              <label className="block text-sm font-medium text-slate-700 mb-2">Válido hasta</label>
+              <input required name="valid_until" type="date" defaultValue={initialData?.valid_until?.split('T')[0] || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
             </div>
           </div>
         </motion.section>
@@ -338,9 +356,27 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Alto (m)</label>
                     <input type="number" step="0.01" value={item.height} onChange={(e) => updateItem(idx, 'height', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
-                  <div>
+                    <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tela / Color</label>
-                    <input type="text" value={item.fabric_name} onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Opcional" />
+                    {(() => {
+                      const matchedProduct = getProductForItem(item)
+                      const fabrics = matchedProduct?.fabrics || []
+                      if (fabrics.length > 0) {
+                        return (
+                          <select
+                            value={item.fabric_name}
+                            onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white"
+                          >
+                            <option value="">Seleccionar tela...</option>
+                            {fabrics.map(f => (
+                              <option key={f.id} value={f.name}>{f.name}</option>
+                            ))}
+                          </select>
+                        )
+                      }
+                      return <input type="text" value={item.fabric_name} onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Opcional" />
+                    })()}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>

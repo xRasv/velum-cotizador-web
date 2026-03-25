@@ -8,8 +8,17 @@ export default async function SettingsPage() {
 
   const { data: products } = await supabase
     .from('products')
-    .select('*')
+    .select('*, product_fabrics(*)')
     .order('name')
 
-  return <ProductSettingsClient initialProducts={products || []} />
+  // Transform the data to match the expected shape
+  const transformedProducts = (products || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    visible_name: p.visible_name || null,
+    image_url: p.image_url || null,
+    fabrics: p.product_fabrics || []
+  }))
+
+  return <ProductSettingsClient initialProducts={transformedProducts} />
 }

@@ -9,8 +9,16 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
   // Fetch products for the dropdown
   const { data: products } = await supabase
     .from('products')
-    .select('*')
+    .select('*, product_fabrics(*)')
     .order('name')
+
+  const transformedProducts = (products || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    visible_name: p.visible_name || null,
+    image_url: p.image_url || null,
+    fabrics: p.product_fabrics || []
+  }))
 
   // Fetch invoice
   const { data: invoice, error: invoiceError } = await supabase
@@ -45,7 +53,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 md:p-8">
-        <InvoiceForm products={products || []} initialData={fullInvoice} invoiceId={invoice.id} />
+        <InvoiceForm products={transformedProducts} initialData={fullInvoice} invoiceId={invoice.id} />
       </div>
     </div>
   )

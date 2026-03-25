@@ -97,7 +97,57 @@ export async function acceptInvoice(invoiceId: string) {
   return { success: true }
 }
 
-export async function updateProduct(id: string, name: string, image_url: string | null) {
+export async function updateProduct(id: string, name: string, image_url: string | null, visible_name?: string) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  const updateData: Record<string, any> = { name, image_url }
+  if (visible_name !== undefined) {
+    updateData.visible_name = visible_name || null
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .update(updateData)
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error updating product:', error)
+    return { error: 'No se pudo actualizar el producto' }
+  }
+
+  return { success: true }
+}
+
+// ---- Product Fabrics CRUD ----
+
+export async function addProductFabric(productId: string, name: string, imageUrl: string | null) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('product_fabrics')
+    .insert([{ product_id: productId, name, image_url: imageUrl }])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error adding fabric:', error)
+    return { error: 'No se pudo agregar la tela' }
+  }
+
+  return { success: true, fabric: data }
+}
+
+export async function updateProductFabric(fabricId: string, name: string, imageUrl: string | null) {
   const cookieStore = await cookies()
   if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
     throw new Error('No autorizado')
@@ -106,13 +156,34 @@ export async function updateProduct(id: string, name: string, image_url: string 
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from('products')
-    .update({ name, image_url })
-    .eq('id', id)
+    .from('product_fabrics')
+    .update({ name, image_url: imageUrl })
+    .eq('id', fabricId)
 
   if (error) {
-    console.error('Error updating product:', error)
-    return { error: 'No se pudo actualizar el producto' }
+    console.error('Error updating fabric:', error)
+    return { error: 'No se pudo actualizar la tela' }
+  }
+
+  return { success: true }
+}
+
+export async function deleteProductFabric(fabricId: string) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('product_fabrics')
+    .delete()
+    .eq('id', fabricId)
+
+  if (error) {
+    console.error('Error deleting fabric:', error)
+    return { error: 'No se pudo eliminar la tela' }
   }
 
   return { success: true }
