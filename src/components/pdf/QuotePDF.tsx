@@ -54,8 +54,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: 12, 
-    color: '#0f172a', // Darkened significantly for readability
+    fontSize: 14, 
+    fontWeight: 600,
+    color: '#000000', 
   },
   clientInfoBox: {
     backgroundColor: '#ffffff',
@@ -188,8 +189,9 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   termsText: {
-    fontSize: 8,
-    color: '#0f172a', // Darkened significantly for readability
+    fontSize: 9,
+    fontWeight: 600,
+    color: '#000000', 
     lineHeight: 1.5,
     marginBottom: 3,
   },
