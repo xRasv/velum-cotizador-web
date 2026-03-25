@@ -530,16 +530,26 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                           <motion.div 
                             layout
                             key={addon.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.01 }}
+                            initial={{ opacity: 0, y: 10, borderColor: '#f1f5f9' }}
+                            animate={{ 
+                              opacity: 1, 
+                              y: 0, 
+                              borderColor: isSelected 
+                                ? '#2563eb' // text-blue-600
+                                : ['#f1f5f9', '#bfdbfe', '#f1f5f9'], // slate-100 to blue-200 and back
+                              scale: 1 
+                            }}
+                            transition={{ 
+                              duration: isSelected ? 0.3 : 2.5,
+                              repeat: isSelected ? 0 : Infinity,
+                              ease: "easeInOut"
+                            }}
                             whileTap={{ scale: 0.98 }}
-                            transition={{ duration: 0.2 }}
                             onClick={() => toggleAddon(addon.id)}
                             className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition-all duration-200 border-2
                               ${isSelected 
-                                ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20' 
-                                : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}
+                                ? 'bg-blue-600 shadow-md shadow-blue-600/20' 
+                                : 'bg-white shadow-sm'}
                               print:border-0 print:border-b print:border-gray-100 print:bg-transparent print:rounded-none print:p-2
                             `}
                           >
