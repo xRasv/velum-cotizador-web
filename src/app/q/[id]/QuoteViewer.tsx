@@ -220,7 +220,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   }
 
   return (
-    <div className="min-h-screen pb-[160px] bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
+    <div className="min-h-screen pb-28 bg-[#fdfdfc] text-slate-900 font-sans print:bg-white print:pb-0 overflow-x-hidden selection:bg-blue-600/20">
       
       {/* Background ambient noise/gradient */}
       <div className="fixed inset-0 pointer-events-none before:fixed before:inset-0 before:-z-20 before:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] before:from-blue-50/50 before:via-transparent before:to-transparent opacity-60 print:hidden" />
