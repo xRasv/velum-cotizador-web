@@ -411,28 +411,29 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       </main>
 
       {/* Floating Action Bar Console */}
-      <AnimatePresence>
-        <motion.div 
-          initial={{ y: 150, opacity: 0, scale: 0.9, x: "-50%" }}
-          animate={{ y: 0, opacity: 1, scale: 1, x: "-50%" }}
-          transition={{ type: "spring", stiffness: 200, damping: 25, delay: 1 }}
-          className="fixed bottom-6 md:bottom-10 left-1/2 w-[95%] md:w-max min-w-[320px] max-w-2xl z-50 print:hidden"
-        >
-          <div className="bg-white/90 backdrop-blur-2xl ring-1 ring-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] rounded-full py-2 px-3 md:p-3 flex flex-row items-center justify-between w-full border border-slate-200/60">
-            
-            <div className="flex flex-col pl-4 md:pl-6 pr-4">
-              <p className="text-[9px] md:text-xs text-slate-500 uppercase tracking-widest font-bold leading-tight">Total</p>
-              <div className="flex items-baseline gap-1 text-slate-900 font-extrabold text-xl md:text-3xl tracking-tight leading-none mt-1">
-                <span className="text-sm md:text-xl font-medium text-slate-400">Q.</span>
-                <span>{mounted ? <AnimatedCounter value={grandTotal} /> : formatCurrency(grandTotal).replace('Q. ', '')}</span>
+      <div className="sticky bottom-6 md:bottom-10 w-full flex justify-center z-50 print:hidden mt-8 md:mt-12 pointer-events-none pb-6">
+        <AnimatePresence>
+          <motion.div 
+            initial={{ y: 150, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 25, delay: 1 }}
+            className="w-[95%] md:w-max min-w-[320px] max-w-2xl pointer-events-auto"
+          >
+            <div className="bg-white/90 backdrop-blur-2xl ring-1 ring-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] rounded-full py-2 px-3 md:p-3 flex flex-row items-center justify-between w-full border border-slate-200/60">
+              
+              <div className="flex flex-col pl-4 md:pl-6 pr-4">
+                <p className="text-[9px] md:text-xs text-slate-500 uppercase tracking-widest font-bold leading-tight">Total</p>
+                <div className="flex items-baseline gap-1 text-slate-900 font-extrabold text-xl md:text-3xl tracking-tight leading-none mt-1">
+                  <span className="text-sm md:text-xl font-medium text-slate-400">Q.</span>
+                  <span>{mounted ? <AnimatedCounter value={grandTotal} /> : formatCurrency(grandTotal).replace('Q. ', '')}</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="w-px h-8 md:h-10 bg-slate-200 mx-2 md:mx-4" />
-            
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleDownloadPdf}
+              
+              <div className="w-px h-8 md:h-10 bg-slate-200 mx-2 md:mx-4" />
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleDownloadPdf}
                 disabled={isGeneratingPdf}
                 className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 disabled:opacity-50 disabled:pointer-events-none"
                 title="Descargar PDF"
@@ -467,6 +468,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
           </div>
         </motion.div>
       </AnimatePresence>
+      </div>
 
     </div>
   )
