@@ -168,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </AnimatePresence>
 
       {/* Main Content Canvas */}
-      <main className="md:ml-[260px] flex-1 min-h-screen flex flex-col">
+      <main className="md:ml-[260px] flex-1 min-h-screen flex flex-col min-w-0 w-full max-w-[100vw] overflow-x-hidden md:overflow-x-visible">
         {/* Desktop Top Bar — Glassmorphism */}
         <header className="hidden md:flex h-20 items-center justify-end px-12 sticky top-0 z-40 bg-white/70 backdrop-blur-[20px]" style={{ WebkitBackdropFilter: 'blur(20px)' }}>
           <div className="flex items-center gap-6">
@@ -206,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto px-4 sm:px-6 md:px-12 py-6 md:py-10 max-w-7xl mx-auto w-full">
+        <div className="flex-1 overflow-auto px-4 sm:px-6 md:px-12 py-6 md:py-10 max-w-7xl mx-auto w-full min-w-0">
           {children}
         </div>
       </main>
