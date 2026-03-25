@@ -22,6 +22,7 @@ type Item = {
   fabric_name: string
   base_price: number
   image_url: string
+  fabric_image_url?: string | null
   addons: Addon[]
 }
 
@@ -356,7 +357,18 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Tela</p>
-                    <p className="text-sm md:text-base font-medium text-slate-800 truncate">{item.fabric_name}</p>
+                    {item.fabric_name ? (
+                      <div className="flex items-center gap-2">
+                        {item.fabric_image_url && (
+                          <div className="w-8 h-8 rounded-lg overflow-hidden ring-2 ring-blue-100 flex-shrink-0">
+                            <img src={item.fabric_image_url} alt={item.fabric_name} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <p className="text-sm md:text-base font-medium text-slate-800 truncate">{item.fabric_name}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-300 italic">—</p>
+                    )}
                   </div>
                 </div>
                 

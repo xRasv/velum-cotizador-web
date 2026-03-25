@@ -18,7 +18,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
   }
 
   // Fetch items with their addons nested
-  const { data: items, error: itemsError } = await supabase
+  const { data: items } = await supabase
     .from('invoice_items')
     .select(`
       *,
@@ -26,9 +26,31 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
     `)
     .eq('invoice_id', invoice.id)
 
+  // Fetch all products with their fabrics for image/fabric enrichment
+  const { data: products } = await supabase
+    .from('products')
+    .select('name, visible_name, image_url, product_fabrics(name, image_url)')
+
+  // Enrich items with product images: use the product's uploaded image from settings,
+  // not the stale image_url stored in invoice_items
+  const enrichedItems = (items || []).map(item => {
+    const matchedProduct = (products || []).find(
+      p => p.name === item.product_name || p.visible_name === item.product_name
+    )
+    return {
+      ...item,
+      // Use the product settings image (always up-to-date), fall back to stored image_url
+      image_url: matchedProduct?.image_url || item.image_url || '',
+      // Find the matching fabric image if a fabric was selected
+      fabric_image_url: item.fabric_name && matchedProduct
+        ? (matchedProduct.product_fabrics || []).find((f: any) => f.name === item.fabric_name)?.image_url || null
+        : null
+    }
+  })
+
   const fullInvoice = {
     ...invoice,
-    items: items || []
+    items: enrichedItems
   }
 
   return <QuoteViewer invoice={fullInvoice} />
