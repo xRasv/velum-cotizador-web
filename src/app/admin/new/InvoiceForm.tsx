@@ -358,7 +358,7 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>
-                    <input type="number" step="0.01" required value={item.base_price} onChange={(e) => updateItem(idx, 'base_price', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-semibold text-primary bg-primary/5 focus:ring-2 focus:ring-primary outline-none" />
+                    <input type="number" step="1" required value={item.base_price} onChange={(e) => updateItem(idx, 'base_price', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-semibold text-primary bg-primary/5 focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
 
@@ -469,7 +469,7 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                               type="number" 
                               required
                               min="0"
-                              step="0.01"
+                              step="1"
                               placeholder="Precio" 
                               value={addon.price} 
                               onChange={(e) => updateAddon(idx, aIdx, 'price', e.target.value)} 
@@ -511,7 +511,7 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
         >
           <div>
             <span className="text-gray-400 uppercase tracking-widest font-bold text-[10px] block">Gran Total (Base)</span>
-            <span className="font-black text-2xl md:text-3xl text-primary">Q. {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            <span className="font-black text-2xl md:text-3xl text-primary">Q. {total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
           </div>
           <motion.button 
             whileHover={{ scale: 1.03, y: -2 }}

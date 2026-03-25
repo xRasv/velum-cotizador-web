@@ -56,7 +56,7 @@ function AnimatedCounter({ value }: { value: number }) {
     rounded.set(value)
   }, [value, rounded])
 
-  return <span>{display.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+  return <span>{display.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
 }
 
 export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
@@ -134,7 +134,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   const grandTotal = baseTotal + addonsTotal
 
   const formatCurrency = (amount: number) => {
-    return 'Q. ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return 'Q. ' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
   }
 
   const handleDownloadPdf = async () => {
