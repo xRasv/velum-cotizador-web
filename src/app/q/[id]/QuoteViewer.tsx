@@ -116,6 +116,18 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
   const handleDownloadPdf = async () => {
     if (isGeneratingPdf) return
     setIsGeneratingPdf(true)
+
+    // Open tab synchronously before any 'await' to appease strict popup blockers on Apple devices
+    const isApple = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent)
+    let newTab: Window | null = null
+    
+    if (isApple) {
+      newTab = window.open('', '_blank')
+      if (newTab) {
+        newTab.document.write('<!DOCTYPE html><html><head><title>Generando Cotización...</title><style>body{display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#334155;background:#f8fafc;}h1{font-weight:600;font-size:18px;}</style></head><body><h1>Preparando PDF, por favor espere unos segundos...</h1></body></html>')
+      }
+    }
+
     try {
       const filename = `Cotizacion-${invoice.reference_code || 'Velum'}.pdf`
       
@@ -123,10 +135,14 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       const blob = await pdf(<QuotePDF invoice={invoice} selectedAddons={Array.from(selectedAddons)} />).toBlob()
       const url = URL.createObjectURL(blob)
       
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      if (isIOS) {
-        window.open(url, '_blank')
+      if (isApple && newTab) {
+        // Tab was successfully opened initially; redirect it to the blob URL
+        newTab.location.href = url
+      } else if (isApple && !newTab) {
+        // Fallback if popup blocker still managed to block the blank synchronous window
+        window.location.assign(url)
       } else {
+        // Standard hidden download link behavior for Windows/Android/Chrome
         const link = document.createElement('a')
         link.href = url
         link.download = filename
@@ -137,6 +153,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (err) {
       console.error('PDF generation failed:', err)
+      if (newTab) newTab.close()
       // Fallback
       window.print()
     } finally {
