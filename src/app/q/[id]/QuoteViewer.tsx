@@ -254,7 +254,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       {/* Cinematic Hero Section */}
       <motion.header 
         style={{ y, opacity }}
-        className="relative h-[38vh] min-h-[320px] md:h-[45vh] md:min-h-[400px] flex flex-col justify-end p-6 md:p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
+        className="relative h-[32vh] min-h-[260px] md:h-[45vh] md:min-h-[400px] flex flex-col justify-end p-6 md:p-8 text-white print:h-auto print:min-h-0 print:p-0 print:text-black print:mb-8 overflow-hidden"
       >
         <motion.div 
           style={{ scale }}
@@ -391,7 +391,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                     </p>
                     
                     {/* Horizontally scrollable swatch strip */}
-                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {item.available_fabrics.map((fabric) => {
                         const isActive = (selectedFabrics[item.id] ?? item.fabric_name) === fabric.name
                         return (
@@ -400,10 +400,10 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                             type="button"
                             onClick={() => handleFabricSelect(item.id, fabric.name)}
                             whileTap={{ scale: 0.92 }}
-                            className={`relative flex-shrink-0 snap-start flex flex-col items-center gap-2 py-3 px-3 rounded-2xl transition-all duration-500 cursor-pointer min-w-[88px]
+                            className={`relative flex-shrink-0 snap-start flex flex-col items-center gap-1.5 py-2 px-2.5 rounded-xl transition-all duration-500 cursor-pointer min-w-[72px]
                               ${isActive 
-                                ? 'bg-gradient-to-b from-blue-50 to-blue-100/50 shadow-xl shadow-blue-200/40 border-2 border-blue-400/50' 
-                                : 'bg-white border-2 border-slate-100 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/30 active:bg-slate-50'
+                                ? 'bg-gradient-to-b from-blue-50 to-blue-100/50 shadow-lg shadow-blue-200/40 border-2 border-blue-400/50' 
+                                : 'bg-white border-2 border-slate-100 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/30 active:bg-slate-50'
                               }
                             `}
                           >
@@ -413,7 +413,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                                 <motion.div
                                   animate={isActive ? { scale: 1.1 } : { scale: 1 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden transition-all duration-500
+                                  className={`w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden transition-all duration-500
                                     ${isActive 
                                       ? 'ring-[3px] ring-blue-500 ring-offset-2 ring-offset-blue-50' 
                                       : 'ring-2 ring-slate-200/50'
@@ -426,7 +426,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                                 <motion.div
                                   animate={isActive ? { scale: 1.1 } : { scale: 1 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all duration-500
+                                  className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500
                                     ${isActive 
                                       ? 'bg-blue-100 ring-[3px] ring-blue-500 ring-offset-2' 
                                       : 'bg-slate-100 ring-2 ring-slate-200/50'
@@ -445,7 +445,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                                     animate={{ scale: 1, rotate: 0 }}
                                     exit={{ scale: 0, rotate: 180 }}
                                     transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                                    className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 border-2 border-white"
+                                    className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 border-2 border-white"
                                   >
                                     <Check size={12} strokeWidth={3} className="text-white" />
                                   </motion.div>
@@ -456,7 +456,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                             {/* Fabric name */}
                             <motion.span 
                               animate={{ color: isActive ? '#2563eb' : '#64748b' }}
-                              className="text-[11px] md:text-xs font-bold leading-tight text-center max-w-[80px] line-clamp-2"
+                              className="text-[10px] md:text-[11px] font-bold leading-tight text-center max-w-[68px] line-clamp-2"
                             >
                               {fabric.name}
                             </motion.span>
@@ -513,6 +513,9 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                           <motion.div 
                             layout
                             key={addon.id}
+                            initial={{ opacity: 0, scale: 0.95, borderColor: 'rgba(99,102,241,0.5)' }}
+                            animate={{ opacity: 1, scale: 1, borderColor: 'rgba(226,232,240,1)' }}
+                            transition={{ duration: 0.6, type: 'spring', stiffness: 300, damping: 25 }}
                             onClick={() => toggleAddon(addon.id)}
                             className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition-all duration-300
                               ${isSelected 
@@ -536,7 +539,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                               </h4>
                             </div>
                             
-                            <div className={`font-medium text-sm md:text-base tabular-nums ${isSelected ? 'text-blue-100' : 'text-slate-500'} print:text-black`}>
+                            <div className={`font-medium text-sm md:text-base tabular-nums whitespace-nowrap flex-shrink-0 ${isSelected ? 'text-blue-100' : 'text-slate-500'} print:text-black`}>
                               {isSelected ? '' : '+ '} {formatCurrency(Number(addon.price))}
                               <span className="hidden print:inline"> ( {isSelected ? 'Inscrito' : 'Opcional'} )</span>
                             </div>
