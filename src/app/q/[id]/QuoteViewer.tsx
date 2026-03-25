@@ -540,9 +540,12 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                               scale: 1 
                             }}
                             transition={{ 
-                              duration: isSelected ? 0.3 : 2.5,
-                              repeat: isSelected ? 0 : Infinity,
-                              ease: "easeInOut"
+                              duration: 0.3,
+                              borderColor: {
+                                duration: isSelected ? 0.3 : 2.5,
+                                repeat: isSelected ? 0 : Infinity,
+                                ease: "easeInOut"
+                              }
                             }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => toggleAddon(addon.id)}
