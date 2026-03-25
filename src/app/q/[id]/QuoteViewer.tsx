@@ -530,15 +530,17 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                           <motion.div 
                             layout
                             key={addon.id}
-                            initial={{ opacity: 0, scale: 0.95, borderColor: 'rgba(99,102,241,0.5)' }}
-                            animate={{ opacity: 1, scale: 1, borderColor: 'rgba(226,232,240,1)' }}
-                            transition={{ duration: 0.6, type: 'spring', stiffness: 300, damping: 25 }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
                             onClick={() => toggleAddon(addon.id)}
-                            className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition-all duration-300
+                            className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition-all duration-200 border-2
                               ${isSelected 
-                                ? 'bg-blue-600 ring-1 ring-blue-600 shadow-md shadow-blue-600/20' 
-                                : 'bg-white ring-1 ring-slate-200 hover:ring-blue-300 hover:shadow-sm'}
-                              print:ring-0 print:bg-transparent print:border-b print:border-gray-100 print:rounded-none print:p-2
+                                ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20' 
+                                : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}
+                              print:border-0 print:border-b print:border-gray-100 print:bg-transparent print:rounded-none print:p-2
                             `}
                           >
                             <div className="flex items-center gap-3 md:gap-4">
@@ -593,20 +595,10 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
             <div className="w-px h-8 md:h-10 bg-slate-200 mx-2 md:mx-4" />
             
             <div className="flex items-center gap-2">
-              {/* WhatsApp Share */}
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Hola! Mira mi cotización de Velum:\n\n📋 Ref: ${invoice.reference_code}\n💰 Total: ${formatCurrency(grandTotal)}\n\n👉 ${typeof window !== 'undefined' ? window.location.origin : ''}/q/${invoice.id}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
-                title="Compartir por WhatsApp"
-              >
-                <MessageCircle size={20} strokeWidth={2.5} />
-              </a>
               <button 
                 onClick={handleDownloadPdf}
                 disabled={isGeneratingPdf}
-                className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 disabled:opacity-50 disabled:pointer-events-none"
+                className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-slate-800 text-white shadow-lg shadow-slate-800/20 hover:bg-slate-900 hover:shadow-xl hover:scale-105 active:scale-95 transition-all focus:ring-4 focus:ring-slate-800/30 disabled:opacity-50 disabled:pointer-events-none"
                 title="Descargar PDF"
               >
                 {isGeneratingPdf ? (
