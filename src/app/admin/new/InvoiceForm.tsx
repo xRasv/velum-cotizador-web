@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check } from 'lucide-react'
+import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice, updateInvoice } from '@/app/actions'
 
@@ -347,7 +347,7 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-5 mb-5">
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ancho (m)</label>
                     <input type="number" step="0.01" value={item.width} onChange={(e) => updateItem(idx, 'width', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" />
@@ -356,38 +356,76 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Alto (m)</label>
                     <input type="number" step="0.01" value={item.height} onChange={(e) => updateItem(idx, 'height', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
-                    <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tela / Color</label>
-                    {(() => {
-                      const matchedProduct = getProductForItem(item)
-                      const fabrics = matchedProduct?.fabrics || []
-                      if (fabrics.length > 0) {
-                        return (
-                          <select
-                            value={item.fabric_name}
-                            onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)}
-                            className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white"
-                          >
-                            <option value="">Seleccionar tela...</option>
-                            {fabrics.map(f => (
-                              <option key={f.id} value={f.name}>{f.name}</option>
-                            ))}
-                          </select>
-                        )
-                      }
-                      return <input type="text" value={item.fabric_name} onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Opcional" />
-                    })()}
-                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>
                     <input type="number" step="0.01" required value={item.base_price} onChange={(e) => updateItem(idx, 'base_price', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-semibold text-primary bg-primary/5 focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
 
-                <div className="mb-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">URL de Imagen (Opcional)</label>
-                  <input type="url" value={item.image_url} onChange={(e) => updateItem(idx, 'image_url', e.target.value)} className="w-full border border-gray-100 rounded-lg p-2 text-xs text-gray-500 focus:ring-1 focus:ring-primary outline-none bg-gray-50" placeholder="https://..." />
-                </div>
+                {/* Fabric / Color Visual Swatch Selector */}
+                {(() => {
+                  const matchedProduct = getProductForItem(item)
+                  const fabrics = matchedProduct?.fabrics || []
+                  if (fabrics.length > 0) {
+                    return (
+                      <div className="mb-5">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Palette size={14} className="text-primary" /> Tela / Color
+                        </label>
+                        <div className="flex flex-wrap gap-3">
+                          {fabrics.map(f => {
+                            const isActive = item.fabric_name === f.name
+                            return (
+                              <motion.button
+                                key={f.id}
+                                type="button"
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => updateItem(idx, 'fabric_name', isActive ? '' : f.name)}
+                                className={`relative flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all duration-300 cursor-pointer min-w-[80px]
+                                  ${isActive
+                                    ? 'border-primary bg-primary/5 shadow-lg shadow-primary/15 ring-2 ring-primary/20'
+                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-md'
+                                  }
+                                `}
+                              >
+                                {f.image_url ? (
+                                  <div className={`w-14 h-14 rounded-lg overflow-hidden ring-2 transition-all ${isActive ? 'ring-primary' : 'ring-transparent'}`}>
+                                    <img src={f.image_url} alt={f.name} className="w-full h-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-all ${isActive ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                                    <Palette size={20} className={isActive ? 'text-primary' : 'text-gray-300'} />
+                                  </div>
+                                )}
+                                <span className={`text-[11px] font-semibold leading-tight text-center max-w-[80px] truncate ${isActive ? 'text-primary' : 'text-gray-600'}`}>
+                                  {f.name}
+                                </span>
+                                {isActive && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center shadow-md"
+                                  >
+                                    <Check size={12} strokeWidth={3} className="text-white" />
+                                  </motion.div>
+                                )}
+                              </motion.button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="mb-5">
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tela / Color</label>
+                      <input type="text" value={item.fabric_name} onChange={(e) => updateItem(idx, 'fabric_name', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Opcional" />
+                    </div>
+                  )
+                })()}
+
+
 
                 {/* Addons Array */}
                 <div className="mt-6 border-t border-gray-100 pt-5">
