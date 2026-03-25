@@ -447,16 +447,16 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                     <input type="number" step="0.01" value={item.height} onChange={(e) => updateItem(idx, 'height', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>
-                      <div className="flex rounded-md border border-gray-200 overflow-hidden text-[10px] font-bold">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 shrink-0">Precio (Q.) <span className="text-red-500">*</span></label>
+                      <div className="flex rounded-md border border-gray-200 divide-x divide-gray-200 overflow-hidden text-[11px] font-bold shrink-0">
                         <button type="button" onClick={() => updateItem(idx, 'isCalcMode', false)}
-                          className={`px-2 py-1 transition-colors ${!item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
+                          className={`px-3 py-1.5 transition-colors ${!item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
                           Manual
                         </button>
                         <button type="button" onClick={() => updateItem(idx, 'isCalcMode', true)}
-                          className={`px-2 py-1 transition-colors flex items-center gap-0.5 ${item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
-                          <Calculator size={10} /> Calc
+                          className={`px-3 py-1.5 transition-colors flex items-center gap-1 ${item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
+                          <Calculator size={11} /> Calc
                         </button>
                       </div>
                     </div>
