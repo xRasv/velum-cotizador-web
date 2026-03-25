@@ -44,7 +44,9 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
       // Find the matching fabric image if a fabric was selected
       fabric_image_url: item.fabric_name && matchedProduct
         ? (matchedProduct.product_fabrics || []).find((f: any) => f.name === item.fabric_name)?.image_url || null
-        : null
+        : null,
+      // Pass ALL available fabrics for this product so the customer can pick
+      available_fabrics: matchedProduct?.product_fabrics || []
     }
   })
 

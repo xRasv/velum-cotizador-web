@@ -13,6 +13,11 @@ type Addon = {
   is_selected: boolean
 }
 
+type FabricOption = {
+  name: string
+  image_url: string | null
+}
+
 type Item = {
   id: string
   room_name: string
@@ -23,6 +28,7 @@ type Item = {
   base_price: number
   image_url: string
   fabric_image_url?: string | null
+  available_fabrics?: FabricOption[]
   addons: Addon[]
 }
 
@@ -81,6 +87,17 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
     return initial
   })
 
+  // Track selected fabrics per item
+  const [selectedFabrics, setSelectedFabrics] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    invoice.items.forEach(item => {
+      if (item.fabric_name) {
+        initial[item.id] = item.fabric_name
+      }
+    })
+    return initial
+  })
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -94,6 +111,14 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
       newSet.add(addonId)
     }
     setSelectedAddons(newSet)
+  }
+
+  const handleFabricSelect = (itemId: string, fabricName: string) => {
+    if (approved) return
+    setSelectedFabrics(prev => ({
+      ...prev,
+      [itemId]: prev[itemId] === fabricName ? '' : fabricName
+    }))
   }
 
   // Calculate extra cost from selected addons
@@ -346,7 +371,7 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 md:gap-4 mb-5 md:mb-6 pt-5 md:pt-6 border-t border-slate-100">
+                <div className="grid grid-cols-2 gap-3 md:gap-4 mb-5 md:mb-6 pt-5 md:pt-6 border-t border-slate-100">
                   <div>
                     <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Ancho</p>
                     <p className="text-sm md:text-base font-medium text-slate-800">{item.width}m</p>
@@ -355,9 +380,116 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                     <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Alto</p>
                     <p className="text-sm md:text-base font-medium text-slate-800">{item.height}m</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Tela</p>
-                    {item.fabric_name ? (
+                </div>
+
+                {/* ✨ Interactive Fabric / Color Picker */}
+                {(item.available_fabrics && item.available_fabrics.length > 0) ? (
+                  <div className="mb-5 md:mb-6">
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      Elige tu Tela / Color
+                    </p>
+                    
+                    {/* Horizontally scrollable swatch strip */}
+                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      {item.available_fabrics.map((fabric) => {
+                        const isActive = (selectedFabrics[item.id] ?? item.fabric_name) === fabric.name
+                        return (
+                          <motion.button
+                            key={fabric.name}
+                            type="button"
+                            onClick={() => handleFabricSelect(item.id, fabric.name)}
+                            whileTap={{ scale: 0.92 }}
+                            className={`relative flex-shrink-0 snap-start flex flex-col items-center gap-2 py-3 px-3 rounded-2xl transition-all duration-500 cursor-pointer min-w-[88px]
+                              ${isActive 
+                                ? 'bg-gradient-to-b from-blue-50 to-blue-100/50 shadow-xl shadow-blue-200/40 border-2 border-blue-400/50' 
+                                : 'bg-white border-2 border-slate-100 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/30 active:bg-slate-50'
+                              }
+                            `}
+                          >
+                            {/* Swatch circle */}
+                            <div className="relative">
+                              {fabric.image_url ? (
+                                <motion.div
+                                  animate={isActive ? { scale: 1.1 } : { scale: 1 }}
+                                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden transition-all duration-500
+                                    ${isActive 
+                                      ? 'ring-[3px] ring-blue-500 ring-offset-2 ring-offset-blue-50' 
+                                      : 'ring-2 ring-slate-200/50'
+                                    }
+                                  `}
+                                >
+                                  <img src={fabric.image_url} alt={fabric.name} className="w-full h-full object-cover" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  animate={isActive ? { scale: 1.1 } : { scale: 1 }}
+                                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all duration-500
+                                    ${isActive 
+                                      ? 'bg-blue-100 ring-[3px] ring-blue-500 ring-offset-2' 
+                                      : 'bg-slate-100 ring-2 ring-slate-200/50'
+                                    }
+                                  `}
+                                >
+                                  <span className="text-lg">🎨</span>
+                                </motion.div>
+                              )}
+                              
+                              {/* Animated check badge */}
+                              <AnimatePresence>
+                                {isActive && (
+                                  <motion.div
+                                    initial={{ scale: 0, rotate: -180 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    exit={{ scale: 0, rotate: 180 }}
+                                    transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                    className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 border-2 border-white"
+                                  >
+                                    <Check size={12} strokeWidth={3} className="text-white" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+
+                            {/* Fabric name */}
+                            <motion.span 
+                              animate={{ color: isActive ? '#2563eb' : '#64748b' }}
+                              className="text-[11px] md:text-xs font-bold leading-tight text-center max-w-[80px] line-clamp-2"
+                            >
+                              {fabric.name}
+                            </motion.span>
+                          </motion.button>
+                        )
+                      })}
+                    </div>
+
+                    {/* Selected fabric display */}
+                    <AnimatePresence mode="wait">
+                      {(selectedFabrics[item.id] ?? item.fabric_name) && (
+                        <motion.div
+                          key={selectedFabrics[item.id] ?? item.fabric_name}
+                          initial={{ opacity: 0, y: 8, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: 'auto' }}
+                          exit={{ opacity: 0, y: -8, height: 0 }}
+                          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                          className="mt-3 overflow-hidden"
+                        >
+                          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50/80 rounded-xl border border-blue-100">
+                            <div className="w-2 h-2 rounded-full bg-blue-500" />
+                            <span className="text-xs font-bold text-blue-700">Selección:</span>
+                            <span className="text-xs font-medium text-blue-600">{selectedFabrics[item.id] ?? item.fabric_name}</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  // Static display when no fabrics are configured
+                  item.fabric_name ? (
+                    <div className="mb-5 md:mb-6">
+                      <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Tela</p>
                       <div className="flex items-center gap-2">
                         {item.fabric_image_url && (
                           <div className="w-8 h-8 rounded-lg overflow-hidden ring-2 ring-blue-100 flex-shrink-0">
@@ -366,11 +498,9 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
                         )}
                         <p className="text-sm md:text-base font-medium text-slate-800 truncate">{item.fabric_name}</p>
                       </div>
-                    ) : (
-                      <p className="text-sm text-slate-300 italic">—</p>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  ) : null
+                )}
                 
                 {/* Interactive Add-ons */}
                 {item.addons.length > 0 && (
