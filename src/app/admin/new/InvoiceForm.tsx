@@ -2,9 +2,20 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette } from 'lucide-react'
+import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette, Calculator, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice, updateInvoice } from '@/app/actions'
+
+const CALC_API_URL = 'https://velumcotizadorapi.vercel.app/api/calculate'
+const CALC_API_KEY = 'rhVNcGmG656LsotEcjyDTvAZD3UiKJ9hptrnW9Is5UM='
+const PRODUCT_TYPE_OPTIONS = [
+  { value: 'enrollable', label: 'Enrollable' },
+  { value: 'dia_y_noche', label: 'Día y Noche' },
+  { value: 'tradicional', label: 'Tradicional' },
+  { value: 'vertical', label: 'Vertical' },
+]
+const GALERIA_OPTIONS = ['RippleFold', 'Francesa', 'Ojetes']
+const VERTICAL_TYPES = ['PVC', 'Tela']
 
 type Fabric = {
   id: string
@@ -39,6 +50,15 @@ type ItemInput = {
   base_price: number
   image_url: string
   addons: AddonInput[]
+  isCalcMode: boolean
+  calcProductType: string
+  calcFabricPrice: number
+  calcProfit: number
+  calcIva: number
+  calcExtras: number
+  calcGaleria: string
+  calcVerticalType: string
+  calcLoading: boolean
 }
 
 const PREDEFINED_ADDONS = [
@@ -141,19 +161,79 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
           price: addon.price || 0,
           is_selected: addon.is_selected || false,
           isCustom: !PREDEFINED_ADDONS.includes(addon.addon_name)
-        })) || []
+        })) || [],
+        isCalcMode: false, calcProductType: '', calcFabricPrice: 0,
+        calcProfit: 100, calcIva: 12, calcExtras: 0,
+        calcGaleria: '', calcVerticalType: 'PVC', calcLoading: false
       }))
     }
     return []
   })
   const [total, setTotal] = useState(initialData?.total_amount || 0)
+  const calcTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  const calculatePrice = async (index: number, item: ItemInput) => {
+    if (!item.calcProductType || !item.width || !item.height) return
+    if (item.calcProductType !== 'vertical' && !item.calcFabricPrice) return
+
+    setItems(prev => prev.map((it, i) => i === index ? { ...it, calcLoading: true } : it))
+
+    try {
+      const body: Record<string, unknown> = {
+        product_type: item.calcProductType,
+        width: Number(item.width),
+        height: Number(item.height),
+        profit: Number(item.calcProfit) || 100,
+        iva: Number(item.calcIva) || 12,
+        extras: Number(item.calcExtras) || 0,
+      }
+      if (item.calcProductType !== 'vertical') body.fabric_price = Number(item.calcFabricPrice)
+      if (item.calcProductType === 'tradicional' && item.calcGaleria) body.galeria = item.calcGaleria
+      if (item.calcProductType === 'vertical') body.vertical_type = item.calcVerticalType || 'PVC'
+
+      const res = await fetch(CALC_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': CALC_API_KEY },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+
+      if (data.success && data.pricing) {
+        const newPrice = Math.round(data.pricing.totalConIva)
+        setItems(prev => {
+          const updated = prev.map((it, i) => i === index ? { ...it, base_price: newPrice, calcLoading: false } : it)
+          setTotal(updated.reduce((acc, obj) => acc + Number(obj.base_price || 0), 0))
+          return updated
+        })
+      } else {
+        setItems(prev => prev.map((it, i) => i === index ? { ...it, calcLoading: false } : it))
+      }
+    } catch {
+      setItems(prev => prev.map((it, i) => i === index ? { ...it, calcLoading: false } : it))
+    }
+  }
+
+  const triggerCalcDebounce = (index: number, item: ItemInput) => {
+    if (calcTimers.current[item.id]) clearTimeout(calcTimers.current[item.id])
+    calcTimers.current[item.id] = setTimeout(() => calculatePrice(index, item), 500)
+  }
+
+  const updateCalcField = (index: number, field: string, value: unknown) => {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    setItems(newItems)
+    triggerCalcDebounce(index, newItems[index])
+  }
 
   const addItem = () => {
     setItems([...items, {
       id: crypto.randomUUID(),
-      room_name: '', product_name: '', width: 0, height: 0, 
+      room_name: '', product_name: '', width: 0, height: 0,
       fabric_name: '', base_price: 0, image_url: '', addons: [],
-      isCustomProduct: false
+      isCustomProduct: false,
+      isCalcMode: false, calcProductType: '', calcFabricPrice: 0,
+      calcProfit: 100, calcIva: 12, calcExtras: 0,
+      calcGaleria: '', calcVerticalType: 'PVC', calcLoading: false
     }])
   }
 
@@ -162,6 +242,12 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
     recalculateTotal(newItems)
+    if (newItems[index].isCalcMode && (field === 'width' || field === 'height')) {
+      triggerCalcDebounce(index, newItems[index])
+    }
+    if (field === 'isCalcMode' && value === true) {
+      triggerCalcDebounce(index, newItems[index])
+    }
   }
 
   const handleProductSelect = (index: number, productName: string, isCustom: boolean) => {
@@ -361,10 +447,134 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                     <input type="number" step="0.01" value={item.height} onChange={(e) => updateItem(idx, 'height', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>
-                    <input type="number" step="1" required value={item.base_price} onChange={(e) => updateItem(idx, 'base_price', e.target.value)} className="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-semibold text-primary bg-primary/5 focus:ring-2 focus:ring-primary outline-none" />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">Precio (Q.) <span className="text-red-500">*</span></label>
+                      <div className="flex rounded-md border border-gray-200 overflow-hidden text-[10px] font-bold">
+                        <button type="button" onClick={() => updateItem(idx, 'isCalcMode', false)}
+                          className={`px-2 py-1 transition-colors ${!item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
+                          Manual
+                        </button>
+                        <button type="button" onClick={() => updateItem(idx, 'isCalcMode', true)}
+                          className={`px-2 py-1 transition-colors flex items-center gap-0.5 ${item.isCalcMode ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-50'}`}>
+                          <Calculator size={10} /> Calc
+                        </button>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <input type="number" step="1" required value={item.base_price}
+                        readOnly={item.isCalcMode}
+                        onChange={(e) => !item.isCalcMode && updateItem(idx, 'base_price', e.target.value)}
+                        className={`w-full border rounded-lg p-2.5 pr-8 text-sm font-semibold text-primary focus:ring-2 focus:ring-primary outline-none transition-all
+                          ${item.isCalcMode ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-75' : 'bg-primary/5 border-gray-200'}`} />
+                      {item.calcLoading && (
+                        <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" />
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Price Calculator Panel */}
+                <AnimatePresence>
+                  {item.isCalcMode && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mb-5 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <Calculator size={13} /> Calculadora de Precio
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="col-span-2">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo de Producto</label>
+                            <select value={item.calcProductType}
+                              onChange={(e) => updateCalcField(idx, 'calcProductType', e.target.value)}
+                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
+                              <option value="">Seleccionar...</option>
+                              {PRODUCT_TYPE_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {item.calcProductType !== 'vertical' && (
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Precio Tela (Q.)</label>
+                              <input type="number" step="0.01" min="0" placeholder="0.00"
+                                value={item.calcFabricPrice || ''}
+                                onChange={(e) => updateCalcField(idx, 'calcFabricPrice', parseFloat(e.target.value) || 0)}
+                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                          )}
+
+                          {item.calcProductType === 'tradicional' && (
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Galería</label>
+                              <select value={item.calcGaleria}
+                                onChange={(e) => updateCalcField(idx, 'calcGaleria', e.target.value)}
+                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
+                                <option value="">Seleccionar...</option>
+                                {GALERIA_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </div>
+                          )}
+
+                          {item.calcProductType === 'vertical' && (
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo Vertical</label>
+                              <select value={item.calcVerticalType}
+                                onChange={(e) => updateCalcField(idx, 'calcVerticalType', e.target.value)}
+                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
+                                {VERTICAL_TYPES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ganancia (%)</label>
+                            <input type="number" step="1" min="0"
+                              value={item.calcProfit}
+                              onChange={(e) => updateCalcField(idx, 'calcProfit', parseFloat(e.target.value) || 0)}
+                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none" />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">IVA (%)</label>
+                            <input type="number" step="1" min="0"
+                              value={item.calcIva}
+                              onChange={(e) => updateCalcField(idx, 'calcIva', parseFloat(e.target.value) || 0)}
+                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none" />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Extras (Q.)</label>
+                            <input type="number" step="1" min="0"
+                              value={item.calcExtras}
+                              onChange={(e) => updateCalcField(idx, 'calcExtras', parseFloat(e.target.value) || 0)}
+                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none" />
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          {item.calcLoading ? (
+                            <span className="text-xs text-primary flex items-center gap-1.5">
+                              <Loader2 size={12} className="animate-spin" /> Calculando...
+                            </span>
+                          ) : item.base_price > 0 ? (
+                            <span className="text-xs text-emerald-600 flex items-center gap-1.5 font-semibold">
+                              <Check size={12} /> Precio calculado: Q. {item.base_price.toLocaleString('en-US')}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Completa los campos para calcular automáticamente.</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Fabric / Color Visual Swatch Selector */}
                 {(() => {
