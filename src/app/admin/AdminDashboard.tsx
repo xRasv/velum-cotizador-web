@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Eye, Pencil, FileText, TrendingUp, Clock, CheckCircle, Search, Filter, Download } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Eye, Pencil, FileText, TrendingUp, Clock, CheckCircle, Search, Filter, Download, Copy, Trash2, MessageCircle, X } from 'lucide-react'
+import { deleteInvoice, duplicateInvoice } from '@/app/actions'
 
 type Invoice = {
   id: string
@@ -66,6 +68,9 @@ const cardVariant: any = {
 
 export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[] | null, stats: Stats }) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
   const conversionRate = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0
 
   const filteredInvoices = invoices?.filter(invoice => 
@@ -236,6 +241,16 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
                   <td className="px-6 md:px-8 py-5">{getStatusBadge(invoice.status)}</td>
                   <td className="px-6 md:px-8 py-5 text-right">
                     <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                      {/* WhatsApp Share */}
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`Hola! Aquí está tu cotización de Velum:\n\n📋 Ref: ${invoice.reference_code}\n💰 Total: ${formatCurrency(invoice.total_amount)}\n\n👉 ${typeof window !== 'undefined' ? window.location.origin : ''}/q/${invoice.id}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-gray-400 hover:text-green-600 transition-colors hover:bg-green-50 rounded-lg"
+                        title="Compartir por WhatsApp"
+                      >
+                        <MessageCircle size={18} />
+                      </a>
                       <Link
                         href={`/q/${invoice.id}`}
                         className="p-2 text-gray-400 hover:text-blue-600 transition-colors hover:bg-blue-50 rounded-lg"
@@ -250,6 +265,31 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
                       >
                         <Pencil size={18} />
                       </Link>
+                      {/* Duplicate */}
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          const result = await duplicateInvoice(invoice.id)
+                          if (result.success && result.newId) {
+                            router.push(`/admin/edit/${result.newId}`)
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-violet-600 transition-colors hover:bg-violet-50 rounded-lg"
+                        title="Duplicar"
+                      >
+                        <Copy size={18} />
+                      </button>
+                      {/* Delete */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteTarget(invoice.id)
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
+                        title="Eliminar"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </td>
                 </motion.tr>
@@ -265,6 +305,56 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
           </div>
         )}
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            onClick={() => !isDeleting && setDeleteTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center"
+            >
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">¿Eliminar cotización?</h3>
+              <p className="text-gray-500 text-sm mb-6">Esta acción no se puede deshacer. Se eliminarán todos los productos y extras asociados.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsDeleting(true)
+                    await deleteInvoice(deleteTarget)
+                    setDeleteTarget(null)
+                    setIsDeleting(false)
+                    router.refresh()
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

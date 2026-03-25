@@ -3,8 +3,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
-import { FileDown, CheckCircle, Plus, Check } from 'lucide-react'
-import { acceptInvoice } from '@/app/actions'
+import { FileDown, CheckCircle, Plus, Check, MessageCircle } from 'lucide-react'
+import { acceptInvoice, saveFabricSelection } from '@/app/actions'
 
 type Addon = {
   id: string
@@ -38,6 +38,7 @@ type Invoice = {
   reference_code: string
   valid_until: string
   total_amount: number
+  notes?: string | null
   items: Item[]
 }
 
@@ -115,10 +116,13 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
 
   const handleFabricSelect = (itemId: string, fabricName: string) => {
     if (approved) return
+    const newName = selectedFabrics[itemId] === fabricName ? '' : fabricName
     setSelectedFabrics(prev => ({
       ...prev,
-      [itemId]: prev[itemId] === fabricName ? '' : fabricName
+      [itemId]: newName
     }))
+    // Persist to DB
+    saveFabricSelection(itemId, newName)
   }
 
   // Calculate extra cost from selected addons
@@ -324,6 +328,19 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
         >
           Detalles de los Productos
         </motion.h2>
+
+        {/* Notes */}
+        {invoice.notes && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85 }}
+            className="max-w-4xl mx-auto bg-amber-50/60 border border-amber-200/50 rounded-2xl p-5 md:p-6 mb-8 print:bg-yellow-50 print:border-yellow-200"
+          >
+            <p className="text-xs text-amber-600 uppercase tracking-widest font-bold mb-2">Notas</p>
+            <p className="text-sm md:text-base text-amber-900/80 leading-relaxed whitespace-pre-line">{invoice.notes}</p>
+          </motion.div>
+        )}
 
         {/* Room Breakdown Items */}
         <motion.div 
@@ -576,6 +593,16 @@ export default function QuoteViewer({ invoice }: { invoice: Invoice }) {
             <div className="w-px h-8 md:h-10 bg-slate-200 mx-2 md:mx-4" />
             
             <div className="flex items-center gap-2">
+              {/* WhatsApp Share */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`Hola! Mira mi cotización de Velum:\n\n📋 Ref: ${invoice.reference_code}\n💰 Total: ${formatCurrency(grandTotal)}\n\n👉 ${typeof window !== 'undefined' ? window.location.origin : ''}/q/${invoice.id}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-12 h-12 md:w-14 md:h-14 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                title="Compartir por WhatsApp"
+              >
+                <MessageCircle size={20} strokeWidth={2.5} />
+              </a>
               <button 
                 onClick={handleDownloadPdf}
                 disabled={isGeneratingPdf}

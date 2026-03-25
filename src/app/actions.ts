@@ -17,6 +17,7 @@ export async function createInvoice(formData: FormData) {
     reference_code: formData.get('reference_code') as string,
     valid_until: formData.get('valid_until') as string,
     total_amount: Number(formData.get('total_amount')),
+    notes: (formData.get('notes') as string) || null,
   }
 
   // 1. Insert Invoice
@@ -205,6 +206,7 @@ export async function updateInvoice(formData: FormData) {
     reference_code: formData.get('reference_code') as string,
     valid_until: formData.get('valid_until') as string,
     total_amount: Number(formData.get('total_amount')),
+    notes: (formData.get('notes') as string) || null,
   }
 
   // 1. Update Invoice
@@ -274,4 +276,106 @@ export async function updateInvoice(formData: FormData) {
   }
 
   redirect('/admin')
+}
+
+export async function deleteInvoice(invoiceId: string) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  // Delete addons first (FK constraint)
+  const { data: items } = await supabase.from('invoice_items').select('id').eq('invoice_id', invoiceId)
+  if (items && items.length > 0) {
+    await supabase.from('invoice_item_addons').delete().in('item_id', items.map(i => i.id))
+  }
+  // Delete items
+  await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId)
+  // Delete invoice
+  const { error } = await supabase.from('invoices').delete().eq('id', invoiceId)
+
+  if (error) {
+    console.error('Error deleting invoice:', error)
+    return { error: 'No se pudo eliminar la cotización' }
+  }
+  return { success: true }
+}
+
+export async function duplicateInvoice(invoiceId: string) {
+  const cookieStore = await cookies()
+  if (cookieStore.get('velum_admin_auth')?.value !== 'authenticated') {
+    throw new Error('No autorizado')
+  }
+
+  const supabase = await createClient()
+
+  // Fetch original invoice
+  const { data: original } = await supabase.from('invoices').select('*').eq('id', invoiceId).single()
+  if (!original) return { error: 'Cotización no encontrada' }
+
+  // Generate new reference code
+  const year = new Date().getFullYear()
+  const randomNum = Math.floor(1000 + Math.random() * 9000)
+  const newRef = `VLM-${year}-${randomNum}`
+
+  // Create new invoice
+  const { data: newInvoice, error: invoiceError } = await supabase.from('invoices').insert([{
+    client_name: original.client_name,
+    reference_code: newRef,
+    valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    total_amount: original.total_amount,
+    notes: original.notes,
+    status: 'pending'
+  }]).select().single()
+
+  if (invoiceError || !newInvoice) return { error: 'No se pudo duplicar' }
+
+  // Fetch and clone items + addons
+  const { data: items } = await supabase.from('invoice_items').select('*, addons:invoice_item_addons(*)').eq('invoice_id', invoiceId)
+
+  if (items) {
+    for (const item of items) {
+      const { data: newItem } = await supabase.from('invoice_items').insert([{
+        invoice_id: newInvoice.id,
+        room_name: item.room_name,
+        product_name: item.product_name,
+        width: item.width,
+        height: item.height,
+        fabric_name: item.fabric_name,
+        base_price: item.base_price,
+        image_url: item.image_url
+      }]).select().single()
+
+      if (newItem && item.addons?.length > 0) {
+        await supabase.from('invoice_item_addons').insert(
+          item.addons.map((a: any) => ({
+            item_id: newItem.id,
+            addon_name: a.addon_name,
+            price: a.price,
+            is_selected: a.is_selected
+          }))
+        )
+      }
+    }
+  }
+
+  return { success: true, newId: newInvoice.id }
+}
+
+export async function saveFabricSelection(itemId: string, fabricName: string) {
+  // Public action — customers can save their fabric preference
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('invoice_items')
+    .update({ fabric_name: fabricName })
+    .eq('id', itemId)
+
+  if (error) {
+    console.error('Error saving fabric selection:', error)
+    return { error: 'No se pudo guardar la selección' }
+  }
+  return { success: true }
 }

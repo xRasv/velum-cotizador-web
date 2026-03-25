@@ -273,6 +273,10 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
               <label className="block text-sm font-medium text-slate-700 mb-2">Válido hasta</label>
               <input required name="valid_until" type="date" defaultValue={initialData?.valid_until?.split('T')[0] || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary" />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-600 mb-1">Notas / Observaciones</label>
+              <textarea name="notes" rows={2} defaultValue={initialData?.notes || ''} className="w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-primary resize-none" placeholder="Ej. Precio incluye instalación, sujeto a visita técnica..." />
+            </div>
           </div>
         </motion.section>
 

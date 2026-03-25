@@ -22,7 +22,7 @@ Font.register({
 // Types
 type Addon = { id: string; addon_name: string; price: number; is_selected: boolean }
 type Item = { id: string; room_name: string; product_name: string; width: number; height: number; fabric_name: string; base_price: number; image_url: string; addons: Addon[] }
-type Invoice = { id: string; client_name: string; reference_code: string; valid_until: string; total_amount: number; items: Item[] }
+type Invoice = { id: string; client_name: string; reference_code: string; valid_until: string; total_amount: number; notes?: string | null; items: Item[] }
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -283,6 +283,14 @@ export const QuotePDF = ({ invoice, selectedAddons }: { invoice: Invoice, select
             <Text style={styles.clientValue}>{formatDate(invoice.valid_until)}</Text>
           </View>
         </View>
+
+        {/* Notes */}
+        {invoice.notes && (
+          <View style={{ backgroundColor: '#FFFBEB', borderRadius: 8, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#FDE68A' }}>
+            <Text style={{ fontSize: 8, color: '#92400E', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700, marginBottom: 4 }}>Notas</Text>
+            <Text style={{ fontSize: 10, color: '#78350F', lineHeight: 1.5 }}>{invoice.notes}</Text>
+          </View>
+        )}
 
         <Text style={styles.sectionTitle}>Detalles de los Productos</Text>
 
