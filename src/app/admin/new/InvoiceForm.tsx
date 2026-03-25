@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette, Calculator, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette, Calculator, Loader2, Search } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice, updateInvoice } from '@/app/actions'
 
 const CALC_API_URL = 'https://velumcotizadorapi.vercel.app/api/calculate'
 const CALC_API_KEY = 'rhVNcGmG656LsotEcjyDTvAZD3UiKJ9hptrnW9Is5UM='
+const FABRIC_PRICES_API_URL = 'https://velumcotizadorapi.vercel.app/api/fabric-prices'
 const PRODUCT_TYPE_OPTIONS = [
   { value: 'enrollable', label: 'Enrollable' },
   { value: 'dia_y_noche', label: 'Día y Noche' },
@@ -59,6 +60,173 @@ type ItemInput = {
   calcGaleria: string
   calcVerticalType: string
   calcLoading: boolean
+}
+
+type FabricPriceOption = {
+  id: string
+  name: string
+  fabric_price: number
+  image_url: string | null
+  product_id: string
+}
+
+function getProductIdForCalcType(calcProductType: string, products: Product[]): string | null {
+  const mappings: Record<string, string[]> = {
+    'enrollable': ['enrollable'],
+    'dia_y_noche': ['dia', 'noche'],
+    'tradicional': ['tradicional'],
+    'vertical': ['vertical'],
+  }
+  const keywords = mappings[calcProductType]
+  if (!keywords) return null
+  const match = products.find(p =>
+    keywords.some(kw => p.name.toLowerCase().includes(kw))
+  )
+  return match?.id || null
+}
+
+function FabricPriceDropdown({
+  productId,
+  value,
+  onChange,
+}: {
+  productId: string | null
+  value: number
+  onChange: (price: number) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [fabricPrices, setFabricPrices] = useState<FabricPriceOption[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isManual, setIsManual] = useState(false)
+  const [selectedName, setSelectedName] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (!productId) { setFabricPrices([]); return }
+    setLoading(true)
+    setSelectedName('')
+    setIsManual(false)
+    fetch(`${FABRIC_PRICES_API_URL}?product_id=${productId}`, {
+      headers: { 'x-api-key': CALC_API_KEY },
+    })
+      .then(r => r.json())
+      .then(data => { if (data.success) setFabricPrices(data.data || []) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [productId])
+
+  const filtered = fabricPrices.filter(fp =>
+    searchTerm ? fp.name.toLowerCase().includes(searchTerm.toLowerCase()) : true
+  )
+
+  if (isManual) {
+    return (
+      <div className="flex gap-1.5">
+        <input
+          type="number" step="0.01" min="0" placeholder="0.00"
+          value={value || ''}
+          onChange={e => onChange(parseFloat(e.target.value) || 0)}
+          className="flex-1 border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none"
+        />
+        <button type="button" onClick={() => setIsManual(false)}
+          className="px-2 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors shrink-0">
+          Lista
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center border border-gray-200 rounded-lg p-2.5 text-sm bg-white hover:border-primary transition-colors focus:ring-2 focus:ring-primary outline-none"
+      >
+        <span className={selectedName ? 'text-gray-900 truncate' : 'text-gray-400'}>
+          {selectedName ? `${selectedName} — Q.${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'Seleccionar tela...'}
+        </span>
+        {loading ? (
+          <Loader2 size={14} className="animate-spin text-gray-400 shrink-0 ml-1" />
+        ) : (
+          <ChevronDown size={16} className={`text-gray-400 transition-transform shrink-0 ml-1 ${isOpen ? 'rotate-180' : ''}`} />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+          {/* Search */}
+          {fabricPrices.length > 3 && (
+            <div className="p-2 border-b border-gray-100">
+              <div className="relative">
+                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Buscar tela..."
+                  className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-100 focus:ring-1 focus:ring-primary outline-none"
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="max-h-48 overflow-y-auto p-1">
+            {loading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 size={16} className="animate-spin text-gray-400" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">No hay telas disponibles.</p>
+            ) : (
+              filtered.map(fp => (
+                <button
+                  key={fp.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(fp.fabric_price)
+                    setSelectedName(fp.name)
+                    setIsOpen(false)
+                    setSearchTerm('')
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-lg flex items-center justify-between gap-2 transition-colors
+                    ${value === fp.fabric_price && selectedName === fp.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+                >
+                  <span className="truncate">{fp.name}</span>
+                  <span className="text-xs font-mono font-semibold text-gray-500 shrink-0">Q.{fp.fabric_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </button>
+              ))
+            )}
+            <div className="h-px bg-gray-100 my-1 mx-2" />
+            <button
+              type="button"
+              onClick={() => {
+                setIsManual(true)
+                setSelectedName('')
+                setIsOpen(false)
+                setSearchTerm('')
+              }}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg flex items-center gap-2 text-primary hover:bg-primary/5 font-medium transition-colors"
+            >
+              <Plus size={14} /> Ingresar manual
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const PREDEFINED_ADDONS = [
@@ -488,48 +656,62 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
                           <Calculator size={13} /> Calculadora de Precio
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {/* Tipo de Producto — styled select */}
                           <div className="col-span-2">
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo de Producto</label>
-                            <select value={item.calcProductType}
-                              onChange={(e) => updateCalcField(idx, 'calcProductType', e.target.value)}
-                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
-                              <option value="">Seleccionar...</option>
-                              {PRODUCT_TYPE_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
+                            <div className="relative">
+                              <select value={item.calcProductType}
+                                onChange={(e) => updateCalcField(idx, 'calcProductType', e.target.value)}
+                                className="appearance-none w-full border border-gray-200 rounded-lg p-2.5 pr-9 text-sm bg-white hover:border-primary focus:ring-2 focus:ring-primary outline-none transition-colors cursor-pointer">
+                                <option value="">Seleccionar...</option>
+                                {PRODUCT_TYPE_OPTIONS.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </select>
+                              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            </div>
                           </div>
 
-                          {item.calcProductType !== 'vertical' && (
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Precio Tela (Q.)</label>
-                              <input type="number" step="0.01" min="0" placeholder="0.00"
-                                value={item.calcFabricPrice || ''}
-                                onChange={(e) => updateCalcField(idx, 'calcFabricPrice', parseFloat(e.target.value) || 0)}
-                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none" />
+                          {/* Precio Tela — dropdown from API */}
+                          {item.calcProductType !== 'vertical' && item.calcProductType && (
+                            <div className="col-span-2 md:col-span-2">
+                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Precio Tela</label>
+                              <FabricPriceDropdown
+                                productId={getProductIdForCalcType(item.calcProductType, products)}
+                                value={item.calcFabricPrice}
+                                onChange={(price) => updateCalcField(idx, 'calcFabricPrice', price)}
+                              />
                             </div>
                           )}
 
+                          {/* Galería — styled select */}
                           {item.calcProductType === 'tradicional' && (
                             <div>
                               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Galería</label>
-                              <select value={item.calcGaleria}
-                                onChange={(e) => updateCalcField(idx, 'calcGaleria', e.target.value)}
-                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
-                                <option value="">Seleccionar...</option>
-                                {GALERIA_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                              </select>
+                              <div className="relative">
+                                <select value={item.calcGaleria}
+                                  onChange={(e) => updateCalcField(idx, 'calcGaleria', e.target.value)}
+                                  className="appearance-none w-full border border-gray-200 rounded-lg p-2.5 pr-9 text-sm bg-white hover:border-primary focus:ring-2 focus:ring-primary outline-none transition-colors cursor-pointer">
+                                  <option value="">Seleccionar...</option>
+                                  {GALERIA_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                              </div>
                             </div>
                           )}
 
+                          {/* Tipo Vertical — styled select */}
                           {item.calcProductType === 'vertical' && (
                             <div>
                               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo Vertical</label>
-                              <select value={item.calcVerticalType}
-                                onChange={(e) => updateCalcField(idx, 'calcVerticalType', e.target.value)}
-                                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary outline-none">
-                                {VERTICAL_TYPES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                              </select>
+                              <div className="relative">
+                                <select value={item.calcVerticalType}
+                                  onChange={(e) => updateCalcField(idx, 'calcVerticalType', e.target.value)}
+                                  className="appearance-none w-full border border-gray-200 rounded-lg p-2.5 pr-9 text-sm bg-white hover:border-primary focus:ring-2 focus:ring-primary outline-none transition-colors cursor-pointer">
+                                  {VERTICAL_TYPES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                              </div>
                             </div>
                           )}
 

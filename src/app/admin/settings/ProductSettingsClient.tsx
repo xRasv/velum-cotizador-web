@@ -6,6 +6,7 @@ import { Pencil, Save, X, Image as ImageIcon, Upload, Loader2, CheckCircle2, Plu
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import { updateProduct, addProductFabric, deleteProductFabric } from '@/app/actions'
+import SettingsTabNav from './SettingsTabNav'
 
 type Fabric = {
   id: string
@@ -179,9 +180,11 @@ export default function ProductSettingsClient({ initialProducts }: { initialProd
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">Configuración de Productos</h2>
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">Configuración</h2>
         <p className="text-gray-500 font-medium max-w-2xl">Administra el catálogo de productos. Aquí puedes modificar los nombres, imágenes y las telas/colores disponibles.</p>
       </motion.div>
+
+      <SettingsTabNav />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {products.map((product, idx) => {
