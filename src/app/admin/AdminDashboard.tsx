@@ -84,66 +84,10 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-12"
+        className="mb-8"
       >
         <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Resumen Ejecutivo</h2>
         <p className="text-gray-500 font-medium">Bienvenido de vuelta. Aquí está el estado de tus operaciones hoy.</p>
-      </motion.div>
-
-      {/* Stats Grid */}
-      <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12"
-      >
-        {/* Total Cotizaciones */}
-        <motion.div
-          variants={cardVariant}
-          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <FileText size={64} />
-          </div>
-          <p className="text-gray-500 text-sm font-semibold mb-2">Total Cotizaciones</p>
-          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.total.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-green-600 text-xs font-bold">
-            <TrendingUp size={14} />
-            <span>Todas las cotizaciones</span>
-          </div>
-        </motion.div>
-
-        {/* Pendientes */}
-        <motion.div
-          variants={cardVariant}
-          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-amber-500">
-            <Clock size={64} />
-          </div>
-          <p className="text-gray-500 text-sm font-semibold mb-2">Pendientes</p>
-          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.pending.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-amber-600 text-xs font-bold">
-            <Clock size={14} />
-            <span>Requieren atención</span>
-          </div>
-        </motion.div>
-
-        {/* Aprobadas */}
-        <motion.div
-          variants={cardVariant}
-          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-blue-600">
-            <CheckCircle size={64} />
-          </div>
-          <p className="text-gray-500 text-sm font-semibold mb-2">Aprobadas</p>
-          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.approved.toLocaleString()}</p>
-          <div className="flex items-center gap-2 text-blue-600 text-xs font-bold">
-            <CheckCircle size={14} />
-            <span>Tasa de conversión {conversionRate}%</span>
-          </div>
-        </motion.div>
       </motion.div>
 
       {/* Table Section */}
@@ -304,6 +248,62 @@ export default function AdminDashboard({ invoices, stats }: { invoices: Invoice[
             <p className="text-xs text-gray-500 font-medium">Mostrando {filteredInvoices.length} de {invoices?.length || 0} resultados</p>
           </div>
         )}
+      </motion.div>
+
+      {/* Stats Grid */}
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mt-8"
+      >
+        {/* Total Cotizaciones */}
+        <motion.div
+          variants={cardVariant}
+          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <FileText size={64} />
+          </div>
+          <p className="text-gray-500 text-sm font-semibold mb-2">Total Cotizaciones</p>
+          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.total.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-green-600 text-xs font-bold">
+            <TrendingUp size={14} />
+            <span>Todas las cotizaciones</span>
+          </div>
+        </motion.div>
+
+        {/* Pendientes */}
+        <motion.div
+          variants={cardVariant}
+          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-amber-500">
+            <Clock size={64} />
+          </div>
+          <p className="text-gray-500 text-sm font-semibold mb-2">Pendientes</p>
+          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.pending.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-amber-600 text-xs font-bold">
+            <Clock size={14} />
+            <span>Requieren atención</span>
+          </div>
+        </motion.div>
+
+        {/* Aprobadas */}
+        <motion.div
+          variants={cardVariant}
+          className="bg-white p-8 rounded-xl shadow-[0_10px_40px_rgba(25,28,30,0.05)] relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-blue-600">
+            <CheckCircle size={64} />
+          </div>
+          <p className="text-gray-500 text-sm font-semibold mb-2">Aprobadas</p>
+          <p className="text-4xl font-black text-gray-900 mb-1 tracking-tight">{stats.approved.toLocaleString()}</p>
+          <div className="flex items-center gap-2 text-blue-600 text-xs font-bold">
+            <CheckCircle size={14} />
+            <span>Tasa de conversión {conversionRate}%</span>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Delete Confirmation Modal */}
