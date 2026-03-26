@@ -486,7 +486,7 @@ export default function InvoiceForm({ products, initialData, invoiceId }: { prod
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-28">
+    <div className="max-w-4xl mx-auto pb-20">
       <motion.div 
         initial={{ opacity: 0, y: 10 }} 
         animate={{ opacity: 1, y: 0 }}
