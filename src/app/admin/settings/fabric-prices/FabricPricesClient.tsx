@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Pencil, X, Loader2, Search, Scissors, DollarSign, ChevronDown, Check, ImageIcon } from 'lucide-react'
+import { Plus, Trash2, Pencil, X, Loader2, Search, Scissors, DollarSign, ChevronDown, Check, ImageIcon, Star } from 'lucide-react'
 import Image from 'next/image'
 import SettingsTabNav from '../SettingsTabNav'
+import { createClient } from '@/utils/supabase/client'
 
 const API_URL = 'https://velumcotizadorapi.vercel.app/api/fabric-prices'
 const API_KEY = 'rhVNcGmG656LsotEcjyDTvAZD3UiKJ9hptrnW9Is5UM='
@@ -23,6 +24,7 @@ type FabricPrice = {
   image_url: string | null
   product_id: string
   created_at: string
+  is_favorite: boolean
   products: { name: string; image_url: string | null }
 }
 
@@ -126,8 +128,20 @@ export default function FabricPricesClient({ products }: { products: Product[] }
 
   const fetchPrices = useCallback(async () => {
     setLoading(true)
-    const data = await apiFetch('GET', undefined, filterProduct ? `product_id=${filterProduct}` : undefined)
-    if (data.success) setFabricPrices(data.data || [])
+    const [data, favData] = await Promise.all([
+      apiFetch('GET', undefined, filterProduct ? `product_id=${filterProduct}` : undefined),
+      createClient().from('fabric_prices').select('id, is_favorite').eq('is_favorite', true),
+    ])
+    if (data.success) {
+      const favIds = new Set((favData.data || []).map((f: { id: string }) => f.id))
+      const prices = (data.data || []).map((fp: FabricPrice) => ({
+        ...fp,
+        is_favorite: favIds.has(fp.id),
+      }))
+      // Sort favorites first
+      prices.sort((a: FabricPrice, b: FabricPrice) => (a.is_favorite === b.is_favorite ? 0 : a.is_favorite ? -1 : 1))
+      setFabricPrices(prices)
+    }
     setLoading(false)
   }, [filterProduct])
 
@@ -206,6 +220,26 @@ export default function FabricPricesClient({ products }: { products: Product[] }
       alert('Error al guardar.')
     } finally {
       setInlineSaving(null)
+    }
+  }
+
+  const handleToggleFavorite = async (fp: FabricPrice) => {
+    const newVal = !fp.is_favorite
+    // Optimistic update
+    setFabricPrices(prev => {
+      const updated = prev.map(f => f.id === fp.id ? { ...f, is_favorite: newVal } : f)
+      updated.sort((a, b) => (a.is_favorite === b.is_favorite ? 0 : a.is_favorite ? -1 : 1))
+      return updated
+    })
+    try {
+      await createClient().from('fabric_prices').update({ is_favorite: newVal }).eq('id', fp.id)
+    } catch {
+      // Revert on error
+      setFabricPrices(prev => {
+        const reverted = prev.map(f => f.id === fp.id ? { ...f, is_favorite: !newVal } : f)
+        reverted.sort((a, b) => (a.is_favorite === b.is_favorite ? 0 : a.is_favorite ? -1 : 1))
+        return reverted
+      })
     }
   }
 
@@ -350,7 +384,8 @@ export default function FabricPricesClient({ products }: { products: Product[] }
               className="bg-white rounded-2xl border border-gray-200/80 shadow-[0_4px_32px_rgba(0,0,0,0.04)] overflow-hidden"
             >
               {/* Table Header */}
-              <div className="grid grid-cols-[2.5fr_2fr_1.2fr_auto] gap-4 px-6 py-3.5 bg-gradient-to-r from-gray-50/80 to-gray-50/40 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em]">
+              <div className="grid grid-cols-[auto_2.5fr_2fr_1.2fr_auto] gap-4 px-6 py-3.5 bg-gradient-to-r from-gray-50/80 to-gray-50/40 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em]">
+                <span className="w-7" />
                 <span>Tela</span>
                 <span>Producto</span>
                 <span>Precio</span>
@@ -370,8 +405,24 @@ export default function FabricPricesClient({ products }: { products: Product[] }
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 10, height: 0 }}
                           transition={{ delay: idx * 0.02, type: 'spring', stiffness: 200, damping: 25 }}
-                          className="grid grid-cols-[2.5fr_2fr_1.2fr_auto] gap-4 px-6 py-3 items-center group hover:bg-blue-50/30 transition-colors"
+                          className="grid grid-cols-[auto_2.5fr_2fr_1.2fr_auto] gap-4 px-6 py-3 items-center group hover:bg-blue-50/30 transition-colors"
                         >
+                          {/* Favorite Star */}
+                          <div className="w-7 flex justify-center">
+                            <motion.button
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.85 }}
+                              onClick={() => handleToggleFavorite(fp)}
+                              className="p-1 rounded-md transition-colors"
+                              title={fp.is_favorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+                            >
+                              <Star
+                                size={16}
+                                className={`transition-colors ${fp.is_favorite ? 'fill-amber-400 text-amber-400' : 'text-gray-200 hover:text-amber-300'}`}
+                              />
+                            </motion.button>
+                          </div>
+
                           {/* Fabric Name + Image */}
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100 overflow-hidden shrink-0 relative">
@@ -491,11 +542,24 @@ export default function FabricPricesClient({ products }: { products: Product[] }
                     className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden"
                   >
                     {/* Card Main - Tappable */}
-                    <button
-                      onClick={() => setExpandedCard(isExpanded ? null : fp.id)}
-                      className="w-full flex items-center gap-3 p-4 text-left active:bg-gray-50/80 transition-colors"
-                    >
-                      {/* Image */}
+                    <div className="w-full flex items-center gap-3 p-4 text-left">
+                      {/* Favorite Star */}
+                      <motion.button
+                        whileTap={{ scale: 0.8 }}
+                        onClick={(e) => { e.stopPropagation(); handleToggleFavorite(fp) }}
+                        className="p-1 -ml-1 shrink-0"
+                      >
+                        <Star
+                          size={18}
+                          className={`transition-colors ${fp.is_favorite ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+                        />
+                      </motion.button>
+
+                      {/* Image + rest tappable to expand */}
+                      <button
+                        onClick={() => setExpandedCard(isExpanded ? null : fp.id)}
+                        className="flex-1 flex items-center gap-3 min-w-0 active:opacity-70 transition-opacity"
+                      >
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100 overflow-hidden shrink-0 relative">
                         {fp.image_url ? (
                           <Image src={fp.image_url} alt={fp.name} fill className="object-cover" sizes="48px" />
@@ -531,7 +595,8 @@ export default function FabricPricesClient({ products }: { products: Product[] }
                       >
                         <ChevronDown size={16} className="text-gray-300" />
                       </motion.div>
-                    </button>
+                      </button>
+                    </div>
 
                     {/* Expanded Actions */}
                     <AnimatePresence>
@@ -551,6 +616,15 @@ export default function FabricPricesClient({ products }: { products: Product[] }
                                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-semibold text-sm active:bg-blue-100 transition-colors"
                               >
                                 <Pencil size={14} /> Editar
+                              </motion.button>
+                              <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleToggleFavorite(fp)}
+                                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
+                                  fp.is_favorite ? 'bg-amber-50 text-amber-600 active:bg-amber-100' : 'bg-gray-50 text-gray-500 active:bg-gray-100'
+                                }`}
+                              >
+                                <Star size={14} className={fp.is_favorite ? 'fill-amber-400' : ''} />
                               </motion.button>
                               {deleteConfirm === fp.id ? (
                                 <div className="flex gap-1.5">

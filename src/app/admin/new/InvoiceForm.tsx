@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette, Calculator, Loader2, Search } from 'lucide-react'
+import { Plus, Trash2, Save, ArrowLeft, ChevronDown, Check, Palette, Calculator, Loader2, Search, Star } from 'lucide-react'
 import Link from 'next/link'
 import { createInvoice, updateInvoice } from '@/app/actions'
+import { createClient } from '@/utils/supabase/client'
 
 const CALC_API_URL = 'https://velumcotizadorapi.vercel.app/api/calculate'
 const CALC_API_KEY = 'rhVNcGmG656LsotEcjyDTvAZD3UiKJ9hptrnW9Is5UM='
@@ -68,6 +69,7 @@ type FabricPriceOption = {
   fabric_price: number
   image_url: string | null
   product_id: string
+  is_favorite?: boolean
 }
 
 function getProductIdForCalcType(calcProductType: string, products: Product[]): string | null {
@@ -117,11 +119,25 @@ function FabricPriceDropdown({
     setLoading(true)
     setSelectedName('')
     setIsManual(false)
-    fetch(`${FABRIC_PRICES_API_URL}?product_id=${productId}`, {
-      headers: { 'x-api-key': CALC_API_KEY },
-    })
-      .then(r => r.json())
-      .then(data => { if (data.success) setFabricPrices(data.data || []) })
+    Promise.all([
+      fetch(`${FABRIC_PRICES_API_URL}?product_id=${productId}`, {
+        headers: { 'x-api-key': CALC_API_KEY },
+      }).then(r => r.json()),
+      createClient().from('fabric_prices').select('id, is_favorite').eq('is_favorite', true),
+    ])
+      .then(([data, favData]) => {
+        if (data.success) {
+          const favIds = new Set((favData.data || []).map((f: { id: string }) => f.id))
+          const prices = (data.data || []).map((fp: FabricPriceOption) => ({
+            ...fp,
+            is_favorite: favIds.has(fp.id),
+          }))
+          prices.sort((a: FabricPriceOption, b: FabricPriceOption) =>
+            (a.is_favorite === b.is_favorite ? 0 : a.is_favorite ? -1 : 1)
+          )
+          setFabricPrices(prices)
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [productId])
@@ -191,9 +207,15 @@ function FabricPriceDropdown({
             ) : filtered.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-4">No hay telas disponibles.</p>
             ) : (
-              filtered.map(fp => (
+              filtered.map((fp, idx) => {
+                const prevFp = idx > 0 ? filtered[idx - 1] : null
+                const showSeparator = prevFp?.is_favorite && !fp.is_favorite
+                return (
+                <React.Fragment key={fp.id}>
+                {showSeparator && (
+                  <div className="h-px bg-gray-100 my-1 mx-2" />
+                )}
                 <button
-                  key={fp.id}
                   type="button"
                   onClick={() => {
                     onChange(fp.fabric_price)
@@ -204,10 +226,15 @@ function FabricPriceDropdown({
                   className={`w-full text-left px-3 py-2 text-sm rounded-lg flex items-center justify-between gap-2 transition-colors
                     ${value === fp.fabric_price && selectedName === fp.name ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
                 >
-                  <span className="truncate">{fp.name}</span>
+                  <span className="truncate flex items-center gap-1.5">
+                    {fp.is_favorite && <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" />}
+                    {fp.name}
+                  </span>
                   <span className="text-xs font-mono font-semibold text-gray-500 shrink-0">Q.{fp.fabric_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </button>
-              ))
+                </React.Fragment>
+                )
+              })
             )}
             <div className="h-px bg-gray-100 my-1 mx-2" />
             <button
